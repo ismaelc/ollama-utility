@@ -1,14 +1,30 @@
-.PHONY: default download_resources web_server ollama_server
+MODEL_NAME = mistral:7b-instruct-v0.2-q4_K_M
 
-# Default task that downloads the assets and starts the ollama and web server
-default: download_resources
+.PHONY: default check_ollama check_model download_resources web_server ollama_server
+
+# Default task that checks for ollama, checks for model, downloads the assets and starts the ollama and web server
+default: check_ollama check_model download_resources
 	@$(MAKE) -j 2 web_server ollama_server
+
+# Check if ollama is installed
+check_ollama:
+	# Check if ollama is installed, if not install it
+	@if ! command -v ollama > /dev/null; then \
+		curl -fsSL https://ollama.com/install.sh | sh; \
+	fi
+
+# Check if model exists
+check_model:
+	# Check if model exists, if not pull it
+	@if ! ollama list | grep -q "$(MODEL_NAME)"; then \
+		ollama pull $(MODEL_NAME); \
+	fi
 
 # Web Server
 web_server:
 	python3 -m http.server --bind 127.0.0.1
 
-# Web Server
+# Ollama Server
 ollama_server:
 	ollama serve
 
