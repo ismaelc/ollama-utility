@@ -244,7 +244,7 @@ function createResponseDiv() {
   responseDiv.id = "response-" + Date.now();
   let responseDeleteButton = createResponseDeleteButton(responseDiv.id);
   responseDiv.appendChild(responseDeleteButton);
-  return responseDiv;
+  return { responseDiv, responseTextDiv };
 }
 
 function createResponseDeleteButton(responseId) {
@@ -272,11 +272,11 @@ function createStopButton() {
   return stopButton;
 }
 
-function handlePostRequest(data, stopButton, responseDiv) {
+function handlePostRequest(data, stopButton, responseDiv, responseTextDiv) {
   postRequest(data, interrupt.signal)
     .then(async (response) => {
       await getResponse(response, (parsedResponse) => {
-        handleResponse(parsedResponse, responseDiv);
+        handleResponse(parsedResponse, responseDiv, responseTextDiv);
       });
     })
     .then(() => {
@@ -292,7 +292,7 @@ function handlePostRequest(data, stopButton, responseDiv) {
     });
 }
 
-function handleResponse(parsedResponse, responseDiv) {
+function handleResponse(parsedResponse, responseDiv, responseTextDiv) {
   let word = parsedResponse.response;
   if (parsedResponse.done) {
     chatHistory.context = parsedResponse.context;
@@ -557,13 +557,13 @@ async function submitRequest() {
   const data = prepareData(input, parsedHistory);
   let userMessageDiv = createUserMessageDiv(input);
   chatHistory.appendChild(userMessageDiv);
-  let responseDiv = createResponseDiv();
+  let {responseDiv, responseTextDiv } = createResponseDiv();
   chatHistory.appendChild(responseDiv);
   let stopButton = createStopButton();
   const sendButton = document.getElementById("send-button");
   sendButton.insertAdjacentElement("beforebegin", stopButton);
   autoScroller.observe(responseDiv);
-  handlePostRequest(data, stopButton, responseDiv);
+  handlePostRequest(data, stopButton, responseDiv, responseTextDiv);
   clearUserInput();
 }
 
