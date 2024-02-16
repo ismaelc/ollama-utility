@@ -24,7 +24,7 @@
         // the package is now available as a global:
         const { encode, decode } = GPTTokenizer_cl100k_base
     </script>
-    <link rel="stylesheet" href="chat.css">
+    <!-- <link rel="stylesheet" href="chat.css"> -->
 </head>
 
 <body data-bs-theme="dark">
@@ -169,6 +169,10 @@
         script.src = src + '?t=' + Math.floor(Math.random() * 1000000);
         head.appendChild(script);
     });
+    var link = document.createElement('link');
+    link.rel = 'stylesheet';
+    link.href = 'chat.css?t=' + Math.floor(Math.random() * 1000000);
+    head.appendChild(link);
     </script>
 
 </body>

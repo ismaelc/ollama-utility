@@ -214,13 +214,19 @@ function createUserMessageDiv(input) {
   userMessageDiv.id = "message-" + Date.now();
   userMessageDiv.style.paddingLeft = "10px";
   let userDeleteButton = createUserDeleteButton(userMessageDiv.id);
+  userMessageDiv.addEventListener("mouseover", function () {
+    userDeleteButton.style.visibility = "visible";
+  });
+  userMessageDiv.addEventListener("mouseout", function () {
+    userDeleteButton.style.visibility = "hidden";
+  });
   userMessageDiv.appendChild(userDeleteButton);
   return userMessageDiv;
 }
 
 function createUserDeleteButton(messageId) {
   let userDeleteButton = document.createElement("button");
-  userDeleteButton.className = "btn btn-secondary delete-button";
+  userDeleteButton.className = "btn btn-secondary delete-button delete-icon";
   userDeleteButton.innerHTML = deleteIcon;
   userDeleteButton.style.visibility = "hidden";
   userDeleteButton.style.marginLeft = "10px";
@@ -243,13 +249,20 @@ function createResponseDiv() {
   responseDiv.appendChild(responseTextDiv);
   responseDiv.id = "response-" + Date.now();
   let responseDeleteButton = createResponseDeleteButton(responseDiv.id);
+  responseDiv.addEventListener("mouseover", function () {
+    responseDeleteButton.style.visibility = "visible";
+  });
+  responseDiv.addEventListener("mouseout", function () {
+    responseDeleteButton.style.visibility = "hidden";
+  });
   responseDiv.appendChild(responseDeleteButton);
   return { responseDiv, responseTextDiv };
 }
 
 function createResponseDeleteButton(responseId) {
   let responseDeleteButton = document.createElement("button");
-  responseDeleteButton.className = "btn btn-secondary delete-button";
+  responseDeleteButton.className =
+    "btn btn-secondary delete-button delete-icon";
   responseDeleteButton.innerHTML = deleteIcon;
   responseDeleteButton.style.visibility = "hidden";
   responseDeleteButton.onclick = function () {
@@ -557,7 +570,7 @@ async function submitRequest() {
   const data = prepareData(input, parsedHistory);
   let userMessageDiv = createUserMessageDiv(input);
   chatHistory.appendChild(userMessageDiv);
-  let {responseDiv, responseTextDiv } = createResponseDiv();
+  let { responseDiv, responseTextDiv } = createResponseDiv();
   chatHistory.appendChild(responseDiv);
   let stopButton = createStopButton();
   const sendButton = document.getElementById("send-button");
