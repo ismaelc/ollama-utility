@@ -26,7 +26,10 @@ web_server:
 
 # Ollama Server
 ollama_server:
-	ollama serve
+	# Check if ollama serve is already running, if not start it
+	@if ! pgrep -f "ollama serve" > /dev/null; then \
+		ollama serve; \
+	fi
 
 # Task to download resources
 download_resources:

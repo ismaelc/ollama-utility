@@ -63,10 +63,13 @@ body {
   padding-bottom: 5.5rem;
 }
 
-#input-area {
+#chat-input-area {
   position: fixed;
   bottom: 0;
   left: 50%;
   transform: translateX(-50%);
 }
 
+#notepad1, #notepad2 {
+  padding: 10px;
+}

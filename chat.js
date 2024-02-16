@@ -1,3 +1,4 @@
+// import { faqString, clipboardIcon, deleteIcon } from "./constants.js";
 const faqString = `
 **How can I expose the Ollama server?**
 
@@ -12,8 +13,6 @@ OLLAMA_ORIGINS=${window.location.origin} ollama serve
 Also see: https://github.com/jmorganca/ollama/blob/main/docs/faq.md
 `;
 
-
-
 const clipboardIcon = `<svg xmlns="http://www.w3.org/2000/svg" width="16" height="16" fill="currentColor" class="bi bi-clipboard" viewBox="0 0 16 16">
 <path d="M4 1.5H3a2 2 0 0 0-2 2V14a2 2 0 0 0 2 2h10a2 2 0 0 0 2-2V3.5a2 2 0 0 0-2-2h-1v1h1a1 1 0 0 1 1 1V14a1 1 0 0 1-1 1H3a1 1 0 0 1-1-1V3.5a1 1 0 0 1 1-1h1v-1z"/>
 <path d="M9.5 1a.5.5 0 0 1 .5.5v1a.5.5 0 0 1-.5.5h-3a.5.5 0 0 1-.5-.5v-1a.5.5 0 0 1 .5-.5h3zm-3-1A1.5 1.5 0 0 0 5 1.5v1A1.5 1.5 0 0 0 6.5 4h3A1.5 1.5 0 0 0 11 2.5v-1A1.5 1.5 0 0 0 9.5 0h-3z"/>
@@ -24,12 +23,15 @@ const deleteIcon = `<svg xmlns="http://www.w3.org/2000/svg" width="16" height="1
 <path fill-rule="evenodd" d="M14.5 3a1 1 0 0 1-1 1H13v9a2 2 0 0 1-2 2H5a2 2 0 0 1-2-2V4h-.5a1 1 0 0 1-1-1V2a1 1 0 0 1 1-1H4a1 1 0 0 1 1-1h6a1 1 0 0 1 1 1h1.5a1 1 0 0 1 1 1v1zM4.118 4L4 4.059V13a1 1 0 0 0 1 1h6a1 1 0 0 0 1-1V4.06l-.118-.06H4.118zM2.5 3V2h11v1h-11z"/>
 </svg>`
 
+
 // change settings of marked from default to remove deprecation warnings
 // see conversation here: https://github.com/markedjs/marked/issues/2793
 marked.use({
   mangle: false,
   headerIds: false
 });
+
+let interrupt = new AbortController();
 
 function autoFocusInput() {
   const userInput = document.getElementById('user-input');
@@ -96,7 +98,7 @@ async function populateModels() {
 
 // adjusts the padding at the bottom of scrollWrapper to be the height of the input box
 function adjustPadding() {
-  const inputBoxHeight = document.getElementById('input-area').offsetHeight;
+  const inputBoxHeight = document.getElementById('chat-input-area').offsetHeight;
   const scrollWrapper = document.getElementById('scroll-wrapper');
   scrollWrapper.style.paddingBottom = `${inputBoxHeight + 15}px`;
 }
@@ -105,8 +107,7 @@ function adjustPadding() {
 const autoResizePadding = new ResizeObserver(() => {
   adjustPadding();
 });
-autoResizePadding.observe(document.getElementById('input-area'));
-
+autoResizePadding.observe(document.getElementById('chat-input-area'));
 
 
 // Function to get the selected model
@@ -173,14 +174,12 @@ async function submitRequest() {
   let parsedHistory = parseChatHistory(chatHistory.innerHTML)
 
   const selectedModel = getSelectedModel();
-  // const context = document.getElementById('chat-history').context;
   const data = {
     model: selectedModel,
     system: getSystemText(),
     prompt: `${parsedHistory}\n[USER]: ${input}\n[ASSISTANT]:`,
-    // context: context,
     options: {
-      stop: ['[USER]:', '[ASSISTANT]:'],
+      stop: ['[USER]', '[ASSISTANT]'],
       temperature: 0.1,
     }
   };
@@ -258,7 +257,7 @@ async function submitRequest() {
   chatHistory.appendChild(responseDiv);
 
   // create button to stop text generation
-  let interrupt = new AbortController();
+  interrupt = new AbortController();
   let stopButton = document.createElement('button');
   stopButton.className = 'btn btn-danger';
   stopButton.innerHTML = 'Stop';
@@ -376,16 +375,77 @@ document.getElementById('user-input').addEventListener('keydown', function (e) {
   }
 });
 
+async function generateText() {
+  const input = document.getElementById('notepad1').value;
+  if (!input || !input.trim()) {
+    return;
+  }
+
+    // Clear the 2nd text area
+    document.getElementById('notepad2').value = '';
+
+  const selectedModel = getSelectedModel();
+  const data = {
+    model: selectedModel,
+    system: getSystemText(),
+    prompt: input,
+    options: {
+      temperature: 0.1,
+    }
+  };
+
+  interrupt = new AbortController();
+  let stopButton = document.getElementById('stop-generate-button')
+  stopButton.onclick = (e) => {
+    e.preventDefault();
+    interrupt.abort('Stop button pressed');
+  }
+
+  // Create spinner and add it next to the Generate button
+  let generateButton = document.getElementById('generate-button');
+  let spinner = document.createElement('span');
+  spinner.className = 'spinner-border spinner-border-sm';
+  spinner.setAttribute('role', 'status');
+  spinner.setAttribute('aria-hidden', 'true');
+  generateButton.disabled = true;
+  generateButton.innerHTML = spinner.outerHTML + ' Generating...';
+
+  postRequest(data, interrupt.signal)
+    .then(async response => {
+      await getResponse(response, parsedResponse => {
+        let word = parsedResponse.response;
+        if (parsedResponse.done) {
+          //stopButton.remove();
+        }
+        if (word != undefined) {
+          document.getElementById('notepad2').value += word;
+        }
+      });
+    })
+    .catch(error => {
+      if (error !== 'Stop button pressed') {
+        console.error(error);
+      }
+      //stopButton.remove();
+    })
+    .finally(() => {
+      // Remove spinner and enable the Generate button
+      generateButton.innerHTML = 'Generate';
+      generateButton.disabled = false;
+    });
+}
+
 window.onload = () => {
   updateChatList();
   populateModels();
   adjustPadding();
   autoFocusInput();
   loadSystemText(); // Load system text from local storage
+  checkTokenCount();
 
   document.getElementById("delete-chat").addEventListener("click", deleteChat);
   document.getElementById("saveName").addEventListener("click", saveChat);
-  document.getElementById("chat-select").addEventListener("change", loadSelectedChat);
+  document.getElementById("chat-select").addEventListener("change", loadSelectedSession);
   document.getElementById("host-address").addEventListener("change", setHostAddress);
   document.getElementById("export-button").addEventListener("click", exportChat);
   document.getElementById("import-button").addEventListener("click", importChat);
@@ -408,13 +468,47 @@ window.onload = () => {
   const chatHistory = document.getElementById('chat-history');
   const observer = new MutationObserver(updateTokenCounter);
   observer.observe(chatHistory, { childList: true, subtree: true });
+
+  var radios = document.getElementsByName('utilityOption');
+  for (var i = 0; i < radios.length; i++) {
+      radios[i].addEventListener('change', function() {
+          // If a text generation is in progress, interrupt it
+          interrupt.abort();
+          // Create a new AbortController for the next text generation
+          interrupt = new AbortController();
+          document.getElementById('chat-container').style.display = this.value === 'chat' ? 'block' : 'none';
+          document.getElementById('chat-input-area').style.display = this.value === 'chat' ? 'block' : 'none';
+          document.getElementById('notepad-container').style.display = this.value === 'notepad' ? 'block' : 'none';
+  
+          // Update the dropdown selection
+          updateDropdownSelection(this.value);
+      });
+  }
+
+  document.getElementById('generate-button').addEventListener('click', generateText);
+
+  const textarea = document.getElementById('notepad1');
+  textarea.addEventListener('input', updateNotebookTokenCounter);
+
+  document.getElementById('save-notepad').addEventListener('click', saveNotepad);
+
+  document.getElementById("delete-notepad").addEventListener("click", deleteNotepad);
+}
+
+function updateDropdownSelection() {
+  var dropdown = document.getElementById('chat-select');
+  for (var i = 0; i < dropdown.options.length; i++) {
+      if (dropdown.options[i].disabled) {
+          dropdown.selectedIndex = i;
+          break;
+      }
+  }
 }
 
 function deleteChat() {
   const selectedChat = document.getElementById("chat-select").value;
   localStorage.removeItem(selectedChat);
   document.getElementById("chat-history").innerHTML = '';
-  document.getElementById("chat-history").context = '';
   updateChatList();
 }
 
@@ -428,26 +522,62 @@ function saveChat() {
 
   if (chatName === null || chatName.trim() === "") return;
   const history = document.getElementById("chat-history").innerHTML;
-  const context = document.getElementById('chat-history').context;
   const model = getSelectedModel();
-  localStorage.setItem(chatName, JSON.stringify({ "history": history, "context": context, "model": model }));
+  const selectedOption = document.querySelector('input[name="utilityOption"]:checked').value;
+  localStorage.setItem(chatName, JSON.stringify({ 
+    "history": history, 
+    "model": model,
+    "selectedOption": selectedOption
+  }));
+  updateChatList();
+}
+
+function saveNotepad() {
+  const notepad1 = document.getElementById('notepad1').value;
+  const notepad2 = document.getElementById('notepad2').value;
+
+  if (notepad1.trim() === "" && notepad2.trim() === "") return;
+
+  const chatName = prompt("Enter a name for this notepad session:");
+
+  if (chatName === null || chatName.trim() === "") return;
+
+  const history = notepad1 + "\n" + notepad2;
+  const model = getSelectedModel();
+  const selectedOption = document.querySelector('input[name="utilityOption"]:checked').value;
+  localStorage.setItem(chatName, JSON.stringify({ 
+    "history": history, 
+    "model": model,
+    "selectedOption": selectedOption
+  }));
   updateChatList();
 }
 
 // Function to load selected chat from dropdown
-function loadSelectedChat() {
+function loadSelectedSession() {
   const selectedChat = document.getElementById("chat-select").value;
   const obj = JSON.parse(localStorage.getItem(selectedChat));
-  document.getElementById("chat-history").innerHTML = obj.history;
-  // document.getElementById("chat-history").context = obj.context;
+  
+  if(obj.selectedOption === 'chat') {
+    document.getElementById("chat-history").innerHTML = obj.history;
+    document.getElementById('chat-container').style.display = 'block';
+    document.getElementById('notepad-container').style.display = 'none';
+  } else if(obj.selectedOption === 'notepad') {
+    document.getElementById("notepad1").value = obj.history.split("\n")[0];
+    document.getElementById("notepad2").value = obj.history.split("\n")[1];
+    document.getElementById('chat-container').style.display = 'none';
+    document.getElementById('notepad-container').style.display = 'block';
+    updateNotebookTokenCounter(); // Update the token counter
+  }
+  
   updateModelInQueryString(obj.model)
-  document.getElementById('chat-container').style.display = 'block';
+  document.querySelector(`input[name="utilityOption"][value="${obj.selectedOption}"]`).checked = true;
 }
 
 // Function to update chat list dropdown
 function updateChatList() {
   const chatList = document.getElementById("chat-select");
-  chatList.innerHTML = '<option value="" disabled selected>Select a chat</option>';
+  chatList.innerHTML = '<option value="" disabled selected>Select a session</option>';
   for (let i = 0; i < localStorage.length; i++) {
     const key = localStorage.key(i);
     if (key === "host-address") continue;
@@ -474,6 +604,7 @@ function loadSystemText() {
 }
 
 // Function to export chat to a local file
+// TODO: Include other attributes like .model
 function exportChat() {
   console.log('exporting chat')
   const selectedChat = document.getElementById("chat-select").value;
@@ -500,4 +631,51 @@ function updateTokenCounter() {
   const chatHistory = document.getElementById('chat-history').innerText;
   const tokens = getTokens(chatHistory);
   document.getElementById('token-counter').innerText = `Tokens: ${tokens.length}`;
+
+  // Check the token count after updating it
+  checkTokenCount();
+}
+
+function updateNotebookTokenCounter() {
+  const textarea = document.getElementById('notepad1');
+  const tokens = getTokens(textarea.value);
+  document.getElementById('notepad-token-counter').innerText = `Tokens: ${tokens.length}`;
+
+  // Check the token count after updating it
+  checkNotebookTokenCount();
+}
+
+function checkTokenCount() {
+  const tokenCounter = document.getElementById('token-counter').innerText;
+  const tokenCount = parseInt(tokenCounter.split(':')[1].trim());
+  const deleteChatButton = document.getElementById('delete-chat');
+  const saveChatButton = document.getElementById('save-chat');
+
+  if (tokenCount === 0) {
+    deleteChatButton.disabled = true;
+    saveChatButton.disabled = true;
+  } else {
+    deleteChatButton.disabled = false;
+    saveChatButton.disabled = false;
+  }
+}
+
+function checkNotebookTokenCount() {
+  const tokenCounter = document.getElementById('notepad-token-counter').innerText;
+  const tokenCount = parseInt(tokenCounter.split(':')[1].trim());
+  const generateButton = document.getElementById('generate-button');
+
+  if (tokenCount === 0) {
+    generateButton.disabled = true;
+  } else {
+    generateButton.disabled = false;
+  }
+}
+
+function deleteNotepad() {
+  const selectedChat = document.getElementById("chat-select").value;
+  localStorage.removeItem(selectedChat);
+  document.getElementById("notepad1").value = '';
+  document.getElementById("notepad2").value = '';
+  updateChatList();
 }
