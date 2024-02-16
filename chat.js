@@ -623,7 +623,7 @@ async function generateText() {
           //stopButton.remove();
         }
         if (word != undefined) {
-          document.getElementById("notepad2").value += word;
+          document.getElementById("notepad2").value += decodeURIComponent(word);
         }
       });
     })
@@ -684,8 +684,8 @@ function loadSelectedSession() {
     document.getElementById("chat-container").style.display = "block";
     document.getElementById("notepad-container").style.display = "none";
   } else if (obj.selectedOption === "notepad") {
-    document.getElementById("notepad1").value = obj.history.split("\n")[0];
-    document.getElementById("notepad2").value = obj.history.split("\n")[1];
+    document.getElementById("notepad1").value = decodeURIComponent(obj.history.split("\n")[0]);
+    document.getElementById("notepad2").value = decodeURIComponent(obj.history.split("\n")[1]);
     document.getElementById("chat-container").style.display = "none";
     document.getElementById("notepad-container").style.display = "block";
     updateNotebookTokenCounter(); // Update the token counter
@@ -721,8 +721,8 @@ function updateChatList() {
 }
 
 function saveNotepad() {
-  const notepad1 = document.getElementById("notepad1").value;
-  const notepad2 = document.getElementById("notepad2").value;
+  const notepad1 = encodeURIComponent(document.getElementById("notepad1").value);
+  const notepad2 = encodeURIComponent(document.getElementById("notepad2").value);
 
   if (notepad1.trim() === "" && notepad2.trim() === "") return;
 

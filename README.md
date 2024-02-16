@@ -14,6 +14,8 @@ make
 open http://localhost:8000 # in browser
 ```
 
+## Screenshots
+
 | Chat | Notepad |
 | --------------------- | --------------------- |
 | ![Chat](ollama-utility-01.png) | ![Notepad](ollama-utility-02.png) |
