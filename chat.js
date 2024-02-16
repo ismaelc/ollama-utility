@@ -159,22 +159,42 @@ document.addEventListener("scroll", (event) => {
 });
 
 
-// Function to handle the user input and call the API functions
 async function submitRequest() {
-  document.getElementById('chat-container').style.display = 'block';
-
-  const input = document.getElementById('user-input').value;
-  // Ignore if input is empty or only contains whitespace
-  if (!input || !input.trim()) {
+  displayChatContainer();
+  const input = getUserInput();
+  if (!isValidInput(input)) {
     return;
   }
-
-  // Create user message element and append to chat history
   let chatHistory = document.getElementById('chat-history');
   let parsedHistory = parseChatHistory(chatHistory.innerHTML)
+  const data = prepareData(input, parsedHistory);
+  let userMessageDiv = createUserMessageDiv(input);
+  chatHistory.appendChild(userMessageDiv);
+  let responseDiv = createResponseDiv();
+  chatHistory.appendChild(responseDiv);
+  let stopButton = createStopButton();
+  const sendButton = document.getElementById('send-button');
+  sendButton.insertAdjacentElement('beforebegin', stopButton);
+  autoScroller.observe(responseDiv);
+  handlePostRequest(data, stopButton, responseDiv);
+  clearUserInput();
+}
 
+function displayChatContainer() {
+  document.getElementById('chat-container').style.display = 'block';
+}
+
+function getUserInput() {
+  return document.getElementById('user-input').value;
+}
+
+function isValidInput(input) {
+  return input && input.trim();
+}
+
+function prepareData(input, parsedHistory) {
   const selectedModel = getSelectedModel();
-  const data = {
+  return {
     model: selectedModel,
     system: getSystemText(),
     prompt: `${parsedHistory}\n[USER]: ${input}\n[ASSISTANT]:`,
@@ -183,80 +203,62 @@ async function submitRequest() {
       temperature: 0.1,
     }
   };
+}
 
-  // console.log('[DATA]', data)
-
+function createUserMessageDiv(input) {
   let userMessageDiv = document.createElement('div');
   userMessageDiv.className = 'mb-2 user-message';
   userMessageDiv.innerText = input;
-  userMessageDiv.id = 'message-' + Date.now(); // Assign a unique ID to the message
-  userMessageDiv.style.paddingLeft = '10px'; // Add left padding to user's message
+  userMessageDiv.id = 'message-' + Date.now();
+  userMessageDiv.style.paddingLeft = '10px';
+  let userDeleteButton = createUserDeleteButton(userMessageDiv.id);
+  userMessageDiv.appendChild(userDeleteButton);
+  return userMessageDiv;
+}
 
-  // User delete button
+function createUserDeleteButton(messageId) {
   let userDeleteButton = document.createElement('button');
   userDeleteButton.className = 'btn btn-secondary delete-button';
   userDeleteButton.innerHTML = deleteIcon;
-  userDeleteButton.style.visibility = 'hidden'; // Hide the button initially
-  userDeleteButton.style.marginLeft = '10px'; // Add margin between user's message and the trash button
+  userDeleteButton.style.visibility = 'hidden';
+  userDeleteButton.style.marginLeft = '10px';
   userDeleteButton.onclick = function () {
-    // Remove the message from the chat history
-    let message = document.getElementById(userMessageDiv.id);
+    let message = document.getElementById(messageId);
     chatHistory.removeChild(message);
   };
+  return userDeleteButton;
+}
 
-  // Show the delete button when user hovers over their message
-  userMessageDiv.onmouseover = function () {
-    userDeleteButton.style.visibility = 'visible';
-  };
-
-  // Hide the delete button when user is not hovering over their message
-  userMessageDiv.onmouseout = function () {
-    userDeleteButton.style.visibility = 'hidden';
-  };
-
-  userMessageDiv.appendChild(userDeleteButton);
-  chatHistory.appendChild(userMessageDiv);
-
-  // Create response container
+function createResponseDiv() {
   let responseDiv = document.createElement('div');
   responseDiv.className = 'response-message mb-2 text-start';
-  responseDiv.style.minHeight = '3em'; // make sure div does not shrink if we cancel the request when no text has been generated yet
-
+  responseDiv.style.minHeight = '3em';
   spinner = document.createElement('div');
   spinner.className = 'spinner-border text-light';
   spinner.setAttribute('role', 'status');
   responseDiv.appendChild(spinner);
-
   let responseTextDiv = document.createElement('div');
   responseDiv.appendChild(responseTextDiv);
-  responseDiv.id = 'response-' + Date.now(); // Assign a unique ID to the response
+  responseDiv.id = 'response-' + Date.now();
+  let responseDeleteButton = createResponseDeleteButton(responseDiv.id);
+  responseDiv.appendChild(responseDeleteButton);
+  return responseDiv;
+}
 
-  // Response delete button
+function createResponseDeleteButton(responseId) {
   let responseDeleteButton = document.createElement('button');
   responseDeleteButton.className = 'btn btn-secondary delete-button';
   responseDeleteButton.innerHTML = deleteIcon;
-  responseDeleteButton.style.visibility = 'hidden'; // Hide the button initially
+  responseDeleteButton.style.visibility = 'hidden';
   responseDeleteButton.onclick = function () {
-    // Remove the response from the chat history
-    let response = document.getElementById(responseDiv.id);
+    let response = document.getElementById(responseId);
     chatHistory.removeChild(response);
-    stopButton.click(); // Stop functionality added here
+    stopButton.click();
   };
+  return responseDeleteButton;
+}
 
-  // Show the delete button when user hovers over the response
-  responseDiv.onmouseover = function () {
-    responseDeleteButton.style.visibility = 'visible';
-  };
-
-  // Hide the delete button when user is not hovering over the response
-  responseDiv.onmouseout = function () {
-    responseDeleteButton.style.visibility = 'hidden';
-  };
-
-  responseDiv.appendChild(responseDeleteButton);
-  chatHistory.appendChild(responseDiv);
-
-  // create button to stop text generation
+function createStopButton() {
   interrupt = new AbortController();
   let stopButton = document.createElement('button');
   stopButton.className = 'btn btn-danger';
@@ -265,49 +267,18 @@ async function submitRequest() {
     e.preventDefault();
     interrupt.abort('Stop button pressed');
   }
-  // add button after sendButton
-  const sendButton = document.getElementById('send-button');
-  sendButton.insertAdjacentElement('beforebegin', stopButton);
+  return stopButton;
+}
 
-  // change autoScroller to keep track of our new responseDiv
-  autoScroller.observe(responseDiv);
-
+function handlePostRequest(data, stopButton, responseDiv) {
   postRequest(data, interrupt.signal)
     .then(async response => {
       await getResponse(response, parsedResponse => {
-        let word = parsedResponse.response;
-        if (parsedResponse.done) {
-          // parsedContext.context is an encoding of the conversation
-          // prior to the latest message. It can be used to continue the conversation
-          // example value is [1, 2, 3]
-          // TODO: Do we need this?
-          chatHistory.context = parsedResponse.context;
-          // Copy button
-          let copyButton = document.createElement('button');
-          copyButton.className = 'btn btn-secondary copy-button';
-          copyButton.innerHTML = clipboardIcon;
-          copyButton.onclick = () => {
-            navigator.clipboard.writeText(responseDiv.hidden_text).then(() => {
-              console.log('Text copied to clipboard');
-            }).catch(err => {
-              console.error('Failed to copy text:', err);
-            });
-          };
-          responseDiv.appendChild(copyButton);
-          // Update the chat history with the assistant response
-        }
-        // add word to response
-        if (word != undefined) {
-          if (responseDiv.hidden_text == undefined) {
-            responseDiv.hidden_text = "";
-          }
-          responseDiv.hidden_text += word;
-          responseTextDiv.innerHTML = DOMPurify.sanitize(marked.parse(responseDiv.hidden_text)); // Append word to response container
-        }
+        handleResponse(parsedResponse, responseDiv);
       });
     })
     .then(() => {
-      stopButton.remove(); // Remove stop button from DOM now that all text has been generated
+      stopButton.remove();
       spinner.remove();
     })
     .catch(error => {
@@ -317,8 +288,39 @@ async function submitRequest() {
       stopButton.remove();
       spinner.remove();
     });
+}
 
-  // Clear user input
+function handleResponse(parsedResponse, responseDiv) {
+  let word = parsedResponse.response;
+  if (parsedResponse.done) {
+    chatHistory.context = parsedResponse.context;
+    let copyButton = createCopyButton(responseDiv.hidden_text);
+    responseDiv.appendChild(copyButton);
+  }
+  if (word != undefined) {
+    if (responseDiv.hidden_text == undefined) {
+      responseDiv.hidden_text = "";
+    }
+    responseDiv.hidden_text += word;
+    responseTextDiv.innerHTML = DOMPurify.sanitize(marked.parse(responseDiv.hidden_text));
+  }
+}
+
+function createCopyButton(hidden_text) {
+  let copyButton = document.createElement('button');
+  copyButton.className = 'btn btn-secondary copy-button';
+  copyButton.innerHTML = clipboardIcon;
+  copyButton.onclick = () => {
+    navigator.clipboard.writeText(hidden_text).then(() => {
+      console.log('Text copied to clipboard');
+    }).catch(err => {
+      console.error('Failed to copy text:', err);
+    });
+  };
+  return copyButton;
+}
+
+function clearUserInput() {
   document.getElementById('user-input').value = '';
 }
 
