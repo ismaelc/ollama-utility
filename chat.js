@@ -1,4 +1,4 @@
-// Constants
+// -------- CONSTANTS --------
 
 const faqString = `
 **How can I expose the Ollama server?**
@@ -24,8 +24,7 @@ const deleteIcon = `<svg xmlns="http://www.w3.org/2000/svg" width="16" height="1
 <path fill-rule="evenodd" d="M14.5 3a1 1 0 0 1-1 1H13v9a2 2 0 0 1-2 2H5a2 2 0 0 1-2-2V4h-.5a1 1 0 0 1-1-1V2a1 1 0 0 1 1-1H4a1 1 0 0 1 1-1h6a1 1 0 0 1 1 1h1.5a1 1 0 0 1 1 1v1zM4.118 4L4 4.059V13a1 1 0 0 0 1 1h6a1 1 0 0 0 1-1V4.06l-.118-.06H4.118zM2.5 3V2h11v1h-11z"/>
 </svg>`;
 
-// -------- CONSTANTS --------
-
+// -------- GLOBALS --------
 // change settings of marked from default to remove deprecation warnings
 // see conversation here: https://github.com/markedjs/marked/issues/2793
 marked.use({
@@ -47,6 +46,9 @@ const autoScroller = new ResizeObserver(() => {
     scrollWrapper.scrollIntoView({ behavior: "smooth", block: "end" });
   }
 });
+
+let lastSelectedChat = "";
+let lastSelectedNotebook = ""
 
 // -------- EVENT LISTENERS --------
 
@@ -100,7 +102,7 @@ document
   .addEventListener("click", deleteNotepad);
 document
   .getElementById("notepad1")
-  .addEventListener("input", updateNotebookTokenCounter);
+  .addEventListener("input", updateNotepadTokenCounter);
 
 // event listener for scrolling
 document.addEventListener("scroll", (event) => {
@@ -133,6 +135,10 @@ const chatHistory = document.getElementById("chat-history");
 const observer = new MutationObserver(updateTokenCounter);
 observer.observe(chatHistory, { childList: true, subtree: true });
 
+const notepadPanels = document.getElementById("chat-history");
+const observerPad = new MutationObserver(updateNotepadTokenCounter);
+observerPad.observe(notepadPanels, { childList: true, subtree: true });
+
 var radios = document.getElementsByName("utilityOption");
 for (var i = 0; i < radios.length; i++) {
   radios[i].addEventListener("change", function () {
@@ -146,9 +152,8 @@ for (var i = 0; i < radios.length; i++) {
       this.value === "chat" ? "block" : "none";
     document.getElementById("notepad-container").style.display =
       this.value === "notepad" ? "block" : "none";
-
-    // Update the dropdown selection
-    updateDropdownSelection(this.value);
+    const selection = this.value === "chat" ? lastSelectedChat : lastSelectedNotebook;
+    updateDropdownSelection(selection);
   });
 }
 
@@ -390,16 +395,6 @@ function parseChatHistory(htmlString) {
   return output;
 }
 
-function updateDropdownSelection() {
-  var dropdown = document.getElementById("chat-select");
-  for (var i = 0; i < dropdown.options.length; i++) {
-    if (dropdown.options[i].disabled) {
-      dropdown.selectedIndex = i;
-      break;
-    }
-  }
-}
-
 // Save system-text to localStorage
 function saveSystemText() {
   const systemText = getSystemText();
@@ -464,7 +459,7 @@ function updateTokenCounter() {
   checkTokenCount();
 }
 
-function updateNotebookTokenCounter() {
+function updateNotepadTokenCounter() {
   const textarea = document.getElementById("notepad1");
   const tokens = getTokens(textarea.value);
   document.getElementById(
@@ -679,6 +674,7 @@ function saveChat() {
     })
   );
   updateChatList();
+  updateDropdownSelection(chatName);
 }
 
 function saveNotepad() {
@@ -707,6 +703,7 @@ function saveNotepad() {
     })
   );
   updateChatList();
+  updateDropdownSelection(chatName);
 }
 
 // Function to load selected chat from dropdown
@@ -718,12 +715,14 @@ function loadSelectedSession() {
     document.getElementById("chat-history").innerHTML = obj.history;
     document.getElementById("chat-container").style.display = "block";
     document.getElementById("notepad-container").style.display = "none";
+    lastSelectedChat = selectedChat;
   } else if (obj.selectedOption === "notepad") {
     document.getElementById("notepad1").value = decodeURIComponent(obj.history.split("\n")[0]);
     document.getElementById("notepad2").value = decodeURIComponent(obj.history.split("\n")[1]);
     document.getElementById("chat-container").style.display = "none";
     document.getElementById("notepad-container").style.display = "block";
-    updateNotebookTokenCounter(); // Update the token counter
+    updateNotepadTokenCounter();
+    lastSelectedNotebook = selectedChat;
   }
 
   updateModelInQueryString(obj.model);
@@ -755,6 +754,26 @@ function updateChatList() {
   }
 }
 
+function updateDropdownSelection(text) {
+  var dropdown = document.getElementById("chat-select");
+  
+  if (text === "") {
+    for (var i = 0; i < dropdown.options.length; i++) {
+      if (dropdown.options[i].hasAttribute("disabled")) {
+        dropdown.selectedIndex = i;
+        break;
+      }
+    }
+  } else {
+    for (var i = 0; i < dropdown.options.length; i++) {
+      if (dropdown.options[i].text === text) {
+        dropdown.selectedIndex = i;
+        break;
+      }
+    }
+  }
+}
+
 function deleteNotepad() {
   const selectedChat = document.getElementById("chat-select").value;
   localStorage.removeItem(selectedChat);
@@ -771,4 +790,11 @@ window.onload = () => {
   autoFocusInput();
   loadSystemText(); // Load system text from local storage
   checkTokenCount();
+
+  // Check if chat option is selected
+  const selectedOption = document.querySelector('input[name="utilityOption"]:checked').value;
+  if (selectedOption === "chat") {
+    // Display chat input area
+    document.getElementById("chat-container").style.display = "block";
+  }
 };

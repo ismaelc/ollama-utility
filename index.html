@@ -33,17 +33,17 @@
             <div class="col-md-8 col-12">
                 <h1>Ollama Utility</h1>
                 <div class="form-check">
-                    <input class="form-check-input" type="radio" name="utilityOption" id="chatOption" value="chat"
-                        checked>
-                    <label class="form-check-label" for="chatOption">
-                        Chat
-                    </label>
-                </div>
-                <div class="form-check">
                     <input class="form-check-input" type="radio" name="utilityOption" id="notepadOption"
                         value="notepad">
                     <label class="form-check-label" for="notepadOption">
                         Notepad
+                    </label>
+                </div>
+                <div class="form-check">
+                    <input class="form-check-input" type="radio" name="utilityOption" id="chatOption" value="chat"
+                        checked>
+                    <label class="form-check-label" for="chatOption">
+                        Chat
                     </label>
                 </div>
             </div>
@@ -97,13 +97,14 @@
                 </div>
             </div>
         </div>
-    </div>
-    <div class="container p-2 card" id="chat-input-area">
-        <div class="input-group">
-            <textarea class="form-control" id="user-input" placeholder="Type your message here..." rows="3"></textarea>
-            <button id="send-button" class="btn btn-primary" style="background-color: green; color: white; border: 2px solid green;">Send</button>
+        <div class="container p-2 card" id="chat-input-area">
+            <div class="input-group">
+                <textarea class="form-control" id="user-input" placeholder="Type your message here..." rows="3"></textarea>
+                <button id="send-button" class="btn btn-primary" style="background-color: green; color: white; border: 2px solid green;">Send</button>
+            </div>
         </div>
     </div>
+
 
     <div class="container" id="notepad-container" style="display: none;">
         <div class="card">
