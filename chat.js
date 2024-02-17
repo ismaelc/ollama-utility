@@ -69,7 +69,14 @@ document.getElementById("user-input").addEventListener("keydown", function (e) {
 });
 
 document.getElementById("delete-chat").addEventListener("click", deleteChat);
-document.getElementById("saveName").addEventListener("click", saveChat);
+document.getElementById("saveName").addEventListener("click", function() {
+  const selectedOption = document.querySelector('input[name="utilityOption"]:checked').value;
+  if (selectedOption === "chat") {
+      saveChat();
+  } else if (selectedOption === "notepad") {
+      saveNotepad();
+  }
+});
 document
   .getElementById("chat-select")
   .addEventListener("change", loadSelectedSession);
@@ -674,6 +681,34 @@ function saveChat() {
   updateChatList();
 }
 
+function saveNotepad() {
+  const notepad1 = encodeURIComponent(document.getElementById("notepad1").value);
+  const notepad2 = encodeURIComponent(document.getElementById("notepad2").value);
+  if (notepad1.trim() === "" && notepad2.trim() === "") return;
+
+  const chatName = document.getElementById("userName").value;
+  if (chatName === null || chatName.trim() === "") return;
+
+  // Close the modal
+  const bootstrapModal = bootstrap.Modal.getInstance(document.getElementById("nameModal"));
+  bootstrapModal.hide();
+
+  const history = notepad1 + "\n" + notepad2;
+  const model = getSelectedModel();
+  const selectedOption = document.querySelector(
+    'input[name="utilityOption"]:checked'
+  ).value;
+  localStorage.setItem(
+    chatName,
+    JSON.stringify({
+      history: history,
+      model: model,
+      selectedOption: selectedOption,
+    })
+  );
+  updateChatList();
+}
+
 // Function to load selected chat from dropdown
 function loadSelectedSession() {
   const selectedChat = document.getElementById("chat-select").value;
@@ -718,32 +753,6 @@ function updateChatList() {
     option.text = key;
     chatList.add(option);
   }
-}
-
-function saveNotepad() {
-  const notepad1 = encodeURIComponent(document.getElementById("notepad1").value);
-  const notepad2 = encodeURIComponent(document.getElementById("notepad2").value);
-
-  if (notepad1.trim() === "" && notepad2.trim() === "") return;
-
-  const chatName = prompt("Enter a name for this notepad session:");
-
-  if (chatName === null || chatName.trim() === "") return;
-
-  const history = notepad1 + "\n" + notepad2;
-  const model = getSelectedModel();
-  const selectedOption = document.querySelector(
-    'input[name="utilityOption"]:checked'
-  ).value;
-  localStorage.setItem(
-    chatName,
-    JSON.stringify({
-      history: history,
-      model: model,
-      selectedOption: selectedOption,
-    })
-  );
-  updateChatList();
 }
 
 function deleteNotepad() {
