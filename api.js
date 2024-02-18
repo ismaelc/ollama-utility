@@ -55,8 +55,8 @@ async function getModels(){
 
 
 // Function to send a POST request to the API
-function postRequest(data, signal) {
-  const URL = `${ollama_host}/api/generate`;
+function postRequest(data, signal, endpoint = "generate") {
+  const URL = `${ollama_host}/api/${endpoint}`;
   return fetch(URL, {
     method: 'POST',
     headers: {

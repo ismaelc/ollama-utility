@@ -219,12 +219,20 @@ function isValidInput(input) {
 
 function prepareData(input, parsedHistory) {
   const selectedModel = getSelectedModel();
+  const system = {
+    "role": "system",
+    "content": getSystemText()
+  }
+  let prompt = parsedHistory.push({
+    "role": "user",
+    "content": input
+  })
+  prompt = [system].concat(parsedHistory);
   return {
     model: selectedModel,
-    system: getSystemText(),
-    prompt: `${parsedHistory}\n[USER]: ${input}\n[ASSISTANT]:`,
+    messages: prompt,
     options: {
-      stop: ["[USER]", "[ASSISTANT]"],
+      //stop: ["[USER]", "[ASSISTANT]"],
       temperature: 0.1,
     },
   };
@@ -264,8 +272,8 @@ function createResponseDiv() {
     const stopButton = document.getElementById("stop-chat-button");
     if(stopButton !== null) {
       stopButton.click();
-      chatHistory.removeChild(response);
     }
+    chatHistory.removeChild(response);
   });
   responseDiv.addEventListener("mouseover", function () {
     responseDeleteButton.style.visibility = "visible";
@@ -303,7 +311,7 @@ function createStopButton() {
 }
 
 function handlePostRequest(data, stopButton, responseDiv, responseTextDiv) {
-  postRequest(data, interrupt.signal)
+  postRequest(data, interrupt.signal, "chat")
     .then(async (response) => {
       await getResponse(response, (parsedResponse) => {
         handleResponse(parsedResponse, responseDiv, responseTextDiv);
@@ -323,7 +331,7 @@ function handlePostRequest(data, stopButton, responseDiv, responseTextDiv) {
 }
 
 function handleResponse(parsedResponse, responseDiv, responseTextDiv) {
-  let word = parsedResponse.response;
+  let word = parsedResponse.message.content;
   if (parsedResponse.done) {
     chatHistory.context = parsedResponse.context;
     let copyButton = createCopyButton(responseDiv.hidden_text);
@@ -367,8 +375,8 @@ function parseChatHistory(htmlString) {
   // Use the DOMParser to turn the string into an HTMLDocument
   var doc = parser.parseFromString(htmlString, "text/html");
 
-  // Initialize an empty string to hold the output
-  var output = "";
+  // Initialize an empty array to hold the output
+  var output = [];
 
   // Get all the user messages
   var userMessages = doc.querySelectorAll('div[id^="message-"]');
@@ -378,25 +386,27 @@ function parseChatHistory(htmlString) {
   // Loop through all the user messages
   for (var i = 0; i < userMessages.length; i++) {
     try {
-      // Add the user message to the output string
-      output +=
-        "[USER]: " + userMessages[i].firstChild.textContent.trim() + "\n";
+      // Add the user message to the output array
+      output.push({
+        "role": "user",
+        "content": userMessages[i].firstChild.textContent.trim()
+      });
     } catch (error) {
       console.info("Error while processing user message: ", error);
     }
 
     try {
-      // Add the assistant response to the output string
-      output +=
-        "[ASSISTANT]: " +
-        assistantResponses[i].firstChild.textContent.trim() +
-        "\n";
+      // Add the assistant response to the output array
+      output.push({
+        "role": "assistant",
+        "content": assistantResponses[i].firstChild.textContent.trim()
+      });
     } catch (error) {
       console.info("Error while processing assistant response: ", error);
     }
   }
 
-  // Return the output string
+  // Return the output array
   return output;
 }
 
