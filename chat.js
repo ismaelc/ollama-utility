@@ -70,7 +70,15 @@ document.getElementById("user-input").addEventListener("keydown", function (e) {
   }
 });
 
-document.getElementById("delete-chat").addEventListener("click", deleteChat);
+document.getElementById("delete-chat").addEventListener("click", function() {
+  deleteSession("chat-select");
+  document.getElementById("chat-history").innerHTML = "";
+});
+document.getElementById("delete-notepad").addEventListener("click", function() {
+  deleteSession("chat-select");
+  document.getElementById("notepad1").value = "";
+  document.getElementById("notepad2").value = "";
+});
 document.getElementById("saveName").addEventListener("click", function () {
   const selectedOption = document.querySelector(
     'input[name="utilityOption"]:checked'
@@ -99,9 +107,7 @@ document
   .getElementById("generate-button")
   .addEventListener("click", generateText);
 document.getElementById("save-notepad").addEventListener("click", saveNotepad);
-document
-  .getElementById("delete-notepad")
-  .addEventListener("click", deleteNotepad);
+
 document.getElementById("notepad1").addEventListener("input", function () {
   updateTokenCounter("notepad1", "notepad-token-counter");
 });
@@ -634,12 +640,26 @@ async function generateText() {
     });
 }
 
-function deleteChat() {
-  const selectedChat = document.getElementById("chat-select").value;
-  localStorage.removeItem(selectedChat);
-  document.getElementById("chat-history").innerHTML = "";
+function deleteSession(sessionName) {
+  const selectedSession = document.getElementById(sessionName).value;
+  localStorage.removeItem(selectedSession);
   updateChatList();
 }
+
+// function deleteChat() {
+//   const selectedChat = document.getElementById("chat-select").value;
+//   localStorage.removeItem(selectedChat);
+//   document.getElementById("chat-history").innerHTML = "";
+//   updateChatList();
+// }
+
+// function deleteNotepad() {
+//   const selectedChat = document.getElementById("chat-select").value;
+//   localStorage.removeItem(selectedChat);
+//   document.getElementById("notepad1").value = "";
+//   document.getElementById("notepad2").value = "";
+//   updateChatList();
+// }
 
 function saveSession(sessionName, history, selectedOption) {
   if (sessionName === null || sessionName.trim() === "") return;
@@ -755,14 +775,6 @@ function updateDropdownSelection(text) {
       }
     }
   }
-}
-
-function deleteNotepad() {
-  const selectedChat = document.getElementById("chat-select").value;
-  localStorage.removeItem(selectedChat);
-  document.getElementById("notepad1").value = "";
-  document.getElementById("notepad2").value = "";
-  updateChatList();
 }
 
 // -------- ONLOAD --------
