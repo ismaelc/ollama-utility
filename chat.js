@@ -158,8 +158,6 @@ for (var i = 0; i < radios.length; i++) {
     interrupt = new AbortController();
     document.getElementById("chat-container").style.display =
       this.value === "chat" ? "block" : "none";
-    document.getElementById("chat-input-area").style.display =
-      this.value === "chat" ? "block" : "none";
     document.getElementById("notepad-container").style.display =
       this.value === "notepad" ? "block" : "none";
     const selection =
