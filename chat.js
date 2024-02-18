@@ -48,7 +48,7 @@ const autoScroller = new ResizeObserver(() => {
 });
 
 let lastSelectedChat = "";
-let lastSelectedNotebook = ""
+let lastSelectedNotebook = "";
 
 // -------- EVENT LISTENERS --------
 
@@ -71,12 +71,14 @@ document.getElementById("user-input").addEventListener("keydown", function (e) {
 });
 
 document.getElementById("delete-chat").addEventListener("click", deleteChat);
-document.getElementById("saveName").addEventListener("click", function() {
-  const selectedOption = document.querySelector('input[name="utilityOption"]:checked').value;
+document.getElementById("saveName").addEventListener("click", function () {
+  const selectedOption = document.querySelector(
+    'input[name="utilityOption"]:checked'
+  ).value;
   if (selectedOption === "chat") {
-      saveChat();
+    saveChat();
   } else if (selectedOption === "notepad") {
-      saveNotepad();
+    saveNotepad();
   }
 });
 document
@@ -100,9 +102,9 @@ document.getElementById("save-notepad").addEventListener("click", saveNotepad);
 document
   .getElementById("delete-notepad")
   .addEventListener("click", deleteNotepad);
-document
-  .getElementById("notepad1")
-  .addEventListener("input", updateNotepadTokenCounter);
+document.getElementById("notepad1").addEventListener("input", function () {
+  updateTokenCounter("notepad1", "notepad-token-counter");
+});
 
 // event listener for scrolling
 document.addEventListener("scroll", (event) => {
@@ -132,11 +134,15 @@ document.addEventListener("scroll", (event) => {
 });
 
 const chatHistory = document.getElementById("chat-history");
-const observer = new MutationObserver(updateTokenCounter);
+const observer = new MutationObserver(function() {
+  updateTokenCounter("chat-history", "token-counter");
+});
 observer.observe(chatHistory, { childList: true, subtree: true });
 
 const notepadPanels = document.getElementById("chat-history");
-const observerPad = new MutationObserver(updateNotepadTokenCounter);
+const observerPad = new MutationObserver(function() {
+  updateTokenCounter("notepad1", "notepad-token-counter");
+});
 observerPad.observe(notepadPanels, { childList: true, subtree: true });
 
 var radios = document.getElementsByName("utilityOption");
@@ -152,7 +158,8 @@ for (var i = 0; i < radios.length; i++) {
       this.value === "chat" ? "block" : "none";
     document.getElementById("notepad-container").style.display =
       this.value === "notepad" ? "block" : "none";
-    const selection = this.value === "chat" ? lastSelectedChat : lastSelectedNotebook;
+    const selection =
+      this.value === "chat" ? lastSelectedChat : lastSelectedNotebook;
     updateDropdownSelection(selection);
   });
 }
@@ -225,7 +232,9 @@ function createUserMessageDiv(input) {
   userMessageDiv.innerText = input;
   userMessageDiv.id = "message-" + Date.now();
   userMessageDiv.style.paddingLeft = "10px";
-  let userDeleteButton = createUserDeleteButton(userMessageDiv.id);
+  let userDeleteButton = createDeleteButton(userMessageDiv.id, (message) => {
+    chatHistory.removeChild(message);
+  });
   userMessageDiv.addEventListener("mouseover", function () {
     userDeleteButton.style.visibility = "visible";
   });
@@ -234,19 +243,6 @@ function createUserMessageDiv(input) {
   });
   userMessageDiv.appendChild(userDeleteButton);
   return userMessageDiv;
-}
-
-function createUserDeleteButton(messageId) {
-  let userDeleteButton = document.createElement("button");
-  userDeleteButton.className = "btn btn-secondary delete-button delete-icon";
-  userDeleteButton.innerHTML = deleteIcon;
-  userDeleteButton.style.visibility = "hidden";
-  userDeleteButton.style.marginLeft = "10px";
-  userDeleteButton.onclick = function () {
-    let message = document.getElementById(messageId);
-    chatHistory.removeChild(message);
-  };
-  return userDeleteButton;
 }
 
 function createResponseDiv() {
@@ -260,7 +256,10 @@ function createResponseDiv() {
   let responseTextDiv = document.createElement("div");
   responseDiv.appendChild(responseTextDiv);
   responseDiv.id = "response-" + Date.now();
-  let responseDeleteButton = createResponseDeleteButton(responseDiv.id);
+  let responseDeleteButton = createDeleteButton(responseDiv.id, (response) => {
+    chatHistory.removeChild(response);
+    stopButton.click();
+  });
   responseDiv.addEventListener("mouseover", function () {
     responseDeleteButton.style.visibility = "visible";
   });
@@ -271,18 +270,16 @@ function createResponseDiv() {
   return { responseDiv, responseTextDiv };
 }
 
-function createResponseDeleteButton(responseId) {
-  let responseDeleteButton = document.createElement("button");
-  responseDeleteButton.className =
-    "btn btn-secondary delete-button delete-icon";
-  responseDeleteButton.innerHTML = deleteIcon;
-  responseDeleteButton.style.visibility = "hidden";
-  responseDeleteButton.onclick = function () {
-    let response = document.getElementById(responseId);
-    chatHistory.removeChild(response);
-    stopButton.click();
+function createDeleteButton(elementId, action) {
+  let deleteButton = document.createElement("button");
+  deleteButton.className = "btn btn-secondary delete-button delete-icon";
+  deleteButton.innerHTML = deleteIcon;
+  deleteButton.style.visibility = "hidden";
+  deleteButton.onclick = function () {
+    let element = document.getElementById(elementId);
+    action(element);
   };
-  return responseDeleteButton;
+  return deleteButton;
 }
 
 function createStopButton() {
@@ -448,26 +445,21 @@ function getTokens(text) {
   return encode(text);
 }
 
-function updateTokenCounter() {
-  const chatHistory = document.getElementById("chat-history").innerText;
-  const tokens = getTokens(chatHistory);
-  document.getElementById(
-    "token-counter"
-  ).innerText = `Tokens: ${tokens.length}`;
+function updateTokenCounter(element, counterId) {
+  const elementAreaToCount = document.getElementById(element);
+  let textToCount;
+
+  if (elementAreaToCount.tagName.toLowerCase() === 'textarea') {
+    textToCount = elementAreaToCount.value;
+  } else if (elementAreaToCount.tagName.toLowerCase() === 'div') {
+    textToCount = elementAreaToCount.innerText;
+  }
+
+  const tokens = getTokens(textToCount);
+  document.getElementById(counterId).innerText = `Tokens: ${tokens.length}`;
 
   // Check the token count after updating it
   checkTokenCount();
-}
-
-function updateNotepadTokenCounter() {
-  const textarea = document.getElementById("notepad1");
-  const tokens = getTokens(textarea.value);
-  document.getElementById(
-    "notepad-token-counter"
-  ).innerText = `Tokens: ${tokens.length}`;
-
-  // Check the token count after updating it
-  checkNotebookTokenCount();
 }
 
 function checkTokenCount() {
@@ -625,7 +617,7 @@ async function generateText() {
           //stopButton.remove();
         }
         if (word != undefined) {
-          document.getElementById("notepad2").value += decodeURIComponent(word);
+          document.getElementById("notepad2").value += word;
         }
       });
     })
@@ -649,9 +641,8 @@ function deleteChat() {
   updateChatList();
 }
 
-// Function to save chat with a unique name
-function saveChat() {
-  const chatName = document.getElementById("userName").value;
+function saveSession(sessionName, history, selectedOption) {
+  if (sessionName === null || sessionName.trim() === "") return;
 
   // Close the modal
   const bootstrapModal = bootstrap.Modal.getInstance(
@@ -659,14 +650,9 @@ function saveChat() {
   );
   bootstrapModal.hide();
 
-  if (chatName === null || chatName.trim() === "") return;
-  const history = document.getElementById("chat-history").innerHTML;
   const model = getSelectedModel();
-  const selectedOption = document.querySelector(
-    'input[name="utilityOption"]:checked'
-  ).value;
   localStorage.setItem(
-    chatName,
+    sessionName,
     JSON.stringify({
       history: history,
       model: model,
@@ -674,36 +660,28 @@ function saveChat() {
     })
   );
   updateChatList();
-  updateDropdownSelection(chatName);
+  updateDropdownSelection(sessionName);
+}
+
+// Function to save chat with a unique name
+function saveChat() {
+  const chatName = document.getElementById("userName").value;
+  if (chatName === null || chatName.trim() === "") return;
+  const history = document.getElementById("chat-history").innerHTML;
+  saveSession(chatName, encodeURIComponent(history), "chat");
 }
 
 function saveNotepad() {
-  const notepad1 = encodeURIComponent(document.getElementById("notepad1").value);
-  const notepad2 = encodeURIComponent(document.getElementById("notepad2").value);
-  if (notepad1.trim() === "" && notepad2.trim() === "") return;
-
-  const chatName = document.getElementById("userName").value;
-  if (chatName === null || chatName.trim() === "") return;
-
-  // Close the modal
-  const bootstrapModal = bootstrap.Modal.getInstance(document.getElementById("nameModal"));
-  bootstrapModal.hide();
-
-  const history = notepad1 + "\n" + notepad2;
-  const model = getSelectedModel();
-  const selectedOption = document.querySelector(
-    'input[name="utilityOption"]:checked'
-  ).value;
-  localStorage.setItem(
-    chatName,
-    JSON.stringify({
-      history: history,
-      model: model,
-      selectedOption: selectedOption,
-    })
+  const notepad1 = encodeURIComponent(
+    document.getElementById("notepad1").value
   );
-  updateChatList();
-  updateDropdownSelection(chatName);
+  const notepad2 = encodeURIComponent(
+    document.getElementById("notepad2").value
+  );
+  if (notepad1.trim() === "" && notepad2.trim() === "") return;
+  const history = notepad1 + "\n" + notepad2;
+  const chatName = document.getElementById("userName").value;
+  saveSession(chatName, history, "notepad");
 }
 
 // Function to load selected chat from dropdown
@@ -712,16 +690,21 @@ function loadSelectedSession() {
   const obj = JSON.parse(localStorage.getItem(selectedChat));
 
   if (obj.selectedOption === "chat") {
-    document.getElementById("chat-history").innerHTML = obj.history;
+    document.getElementById("chat-history").innerHTML = decodeURIComponent(obj.history);
     document.getElementById("chat-container").style.display = "block";
     document.getElementById("notepad-container").style.display = "none";
     lastSelectedChat = selectedChat;
   } else if (obj.selectedOption === "notepad") {
-    document.getElementById("notepad1").value = decodeURIComponent(obj.history.split("\n")[0]);
-    document.getElementById("notepad2").value = decodeURIComponent(obj.history.split("\n")[1]);
+    document.getElementById("notepad1").value = decodeURIComponent(
+      obj.history.split("\n")[0]
+    );
+    document.getElementById("notepad2").value = decodeURIComponent(
+      obj.history.split("\n")[1]
+    );
     document.getElementById("chat-container").style.display = "none";
     document.getElementById("notepad-container").style.display = "block";
-    updateNotepadTokenCounter();
+    // updateNotepadTokenCounter();
+    updateTokenCounter("notepad1", "notepad-token-counter");
     lastSelectedNotebook = selectedChat;
   }
 
@@ -756,7 +739,7 @@ function updateChatList() {
 
 function updateDropdownSelection(text) {
   var dropdown = document.getElementById("chat-select");
-  
+
   if (text === "") {
     for (var i = 0; i < dropdown.options.length; i++) {
       if (dropdown.options[i].hasAttribute("disabled")) {
@@ -792,7 +775,9 @@ window.onload = () => {
   checkTokenCount();
 
   // Check if chat option is selected
-  const selectedOption = document.querySelector('input[name="utilityOption"]:checked').value;
+  const selectedOption = document.querySelector(
+    'input[name="utilityOption"]:checked'
+  ).value;
   if (selectedOption === "chat") {
     // Display chat input area
     document.getElementById("chat-container").style.display = "block";
