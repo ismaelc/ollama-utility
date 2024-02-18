@@ -261,8 +261,11 @@ function createResponseDiv() {
   responseDiv.appendChild(responseTextDiv);
   responseDiv.id = "response-" + Date.now();
   let responseDeleteButton = createDeleteButton(responseDiv.id, (response) => {
-    chatHistory.removeChild(response);
-    stopButton.click();
+    const stopButton = document.getElementById("stop-chat-button");
+    if(stopButton !== null) {
+      stopButton.click();
+      chatHistory.removeChild(response);
+    }
   });
   responseDiv.addEventListener("mouseover", function () {
     responseDeleteButton.style.visibility = "visible";
@@ -289,6 +292,7 @@ function createDeleteButton(elementId, action) {
 function createStopButton() {
   interrupt = new AbortController();
   let stopButton = document.createElement("button");
+  stopButton.id = "stop-chat-button";
   stopButton.className = "btn btn-danger";
   stopButton.innerHTML = "Stop";
   stopButton.onclick = (e) => {
@@ -438,7 +442,6 @@ function fileInputChange(e) {
       const contents = e.target.result;
       const chatName = file.name.replace(".txt", "");
       localStorage.setItem(chatName, contents);
-      // updateChatList();
       updateChatListAndSelection()
     };
     reader.readAsText(file);
@@ -567,10 +570,13 @@ async function submitRequest() {
   let chatHistory = document.getElementById("chat-history");
   let parsedHistory = parseChatHistory(chatHistory.innerHTML);
   const data = prepareData(input, parsedHistory);
+
   let userMessageDiv = createUserMessageDiv(input);
   chatHistory.appendChild(userMessageDiv);
+
   let { responseDiv, responseTextDiv } = createResponseDiv();
   chatHistory.appendChild(responseDiv);
+
   let stopButton = createStopButton();
   const sendButton = document.getElementById("send-button");
   sendButton.insertAdjacentElement("beforebegin", stopButton);
@@ -642,7 +648,6 @@ async function generateText() {
 function deleteSession(sessionName) {
   const selectedSession = document.getElementById(sessionName).value;
   localStorage.removeItem(selectedSession);
-  // updateChatList();
   updateChatListAndSelection();
 }
 
@@ -709,7 +714,6 @@ function loadSelectedSession() {
     );
     document.getElementById("chat-container").style.display = "none";
     document.getElementById("notepad-container").style.display = "block";
-    // updateNotepadTokenCounter();
     updateTokenCounter("notepad1", "notepad-token-counter");
     lastSelectedNotebook = selectedChat;
   }
@@ -755,7 +759,6 @@ function updateChatListAndSelection(text = "") {
 
 // -------- ONLOAD --------
 window.onload = () => {
-  // updateChatList()
   updateChatListAndSelection();
   populateModels();
   adjustPadding();
