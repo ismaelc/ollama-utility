@@ -450,7 +450,8 @@ function fileInputChange(e) {
       const contents = e.target.result;
       const chatName = file.name.replace(".txt", "");
       localStorage.setItem(chatName, contents);
-      updateChatListAndSelection()
+      updateChatListAndSelection(chatName);
+      loadSelectedSession();
     };
     reader.readAsText(file);
   }
