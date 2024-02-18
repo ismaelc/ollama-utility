@@ -106,8 +106,6 @@ document
 document
   .getElementById("generate-button")
   .addEventListener("click", generateText);
-document.getElementById("save-notepad").addEventListener("click", saveNotepad);
-
 document.getElementById("notepad1").addEventListener("input", function () {
   updateTokenCounter("notepad1", "notepad-token-counter");
 });
@@ -166,7 +164,7 @@ for (var i = 0; i < radios.length; i++) {
       this.value === "notepad" ? "block" : "none";
     const selection =
       this.value === "chat" ? lastSelectedChat : lastSelectedNotebook;
-    updateDropdownSelection(selection);
+    updateChatListAndSelection(selection);
   });
 }
 
@@ -440,7 +438,8 @@ function fileInputChange(e) {
       const contents = e.target.result;
       const chatName = file.name.replace(".txt", "");
       localStorage.setItem(chatName, contents);
-      updateChatList();
+      // updateChatList();
+      updateChatListAndSelection()
     };
     reader.readAsText(file);
   }
@@ -643,23 +642,9 @@ async function generateText() {
 function deleteSession(sessionName) {
   const selectedSession = document.getElementById(sessionName).value;
   localStorage.removeItem(selectedSession);
-  updateChatList();
+  // updateChatList();
+  updateChatListAndSelection();
 }
-
-// function deleteChat() {
-//   const selectedChat = document.getElementById("chat-select").value;
-//   localStorage.removeItem(selectedChat);
-//   document.getElementById("chat-history").innerHTML = "";
-//   updateChatList();
-// }
-
-// function deleteNotepad() {
-//   const selectedChat = document.getElementById("chat-select").value;
-//   localStorage.removeItem(selectedChat);
-//   document.getElementById("notepad1").value = "";
-//   document.getElementById("notepad2").value = "";
-//   updateChatList();
-// }
 
 function saveSession(sessionName, history, selectedOption) {
   if (sessionName === null || sessionName.trim() === "") return;
@@ -679,8 +664,7 @@ function saveSession(sessionName, history, selectedOption) {
       selectedOption: selectedOption,
     })
   );
-  updateChatList();
-  updateDropdownSelection(sessionName);
+  updateChatListAndSelection(sessionName);
 }
 
 // Function to save chat with a unique name
@@ -689,6 +673,7 @@ function saveChat() {
   if (chatName === null || chatName.trim() === "") return;
   const history = document.getElementById("chat-history").innerHTML;
   saveSession(chatName, encodeURIComponent(history), "chat");
+  lastSelectedChat = chatName;
 }
 
 function saveNotepad() {
@@ -702,6 +687,7 @@ function saveNotepad() {
   const history = notepad1 + "\n" + notepad2;
   const chatName = document.getElementById("userName").value;
   saveSession(chatName, history, "notepad");
+  lastSelectedNotebook = chatName;
 }
 
 // Function to load selected chat from dropdown
@@ -741,11 +727,12 @@ function loadSelectedSession() {
   }
 }
 
-// Function to update chat list dropdown
-function updateChatList() {
+// Function to update chat list dropdown and select the appropriate option
+function updateChatListAndSelection(text = "") {
   const chatList = document.getElementById("chat-select");
   chatList.innerHTML =
     '<option value="" disabled selected>Select a session</option>';
+  let selectedIndex = 0;
   for (let i = 0; i < localStorage.length; i++) {
     const key = localStorage.key(i);
     if (key === "host-address") continue;
@@ -754,32 +741,22 @@ function updateChatList() {
     option.value = key;
     option.text = key;
     chatList.add(option);
-  }
-}
-
-function updateDropdownSelection(text) {
-  var dropdown = document.getElementById("chat-select");
-
-  if (text === "") {
-    for (var i = 0; i < dropdown.options.length; i++) {
-      if (dropdown.options[i].hasAttribute("disabled")) {
-        dropdown.selectedIndex = i;
-        break;
-      }
+    if (key === text) {
+      selectedIndex = i;
     }
-  } else {
-    for (var i = 0; i < dropdown.options.length; i++) {
-      if (dropdown.options[i].text === text) {
-        dropdown.selectedIndex = i;
-        break;
-      }
+  }
+  for (var i = 0; i < chatList.options.length; i++) {
+    if (chatList.options[i].text === text) {
+      chatList.selectedIndex = i;
+      break;
     }
   }
 }
 
 // -------- ONLOAD --------
 window.onload = () => {
-  updateChatList();
+  // updateChatList()
+  updateChatListAndSelection();
   populateModels();
   adjustPadding();
   autoFocusInput();
