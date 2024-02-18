@@ -674,11 +674,11 @@ function saveSession(sessionName, history, selectedOption) {
 
 // Function to save chat with a unique name
 function saveChat() {
-  const chatName = document.getElementById("userName").value;
-  if (chatName === null || chatName.trim() === "") return;
+  const session = document.getElementById("userName").value;
+  if (session === null || session.trim() === "") return;
   const history = document.getElementById("chat-history").innerHTML;
-  saveSession(chatName, encodeURIComponent(history), "chat");
-  lastSelectedChat = chatName;
+  saveSession(session, encodeURIComponent(history), "chat");
+  lastSelectedChat = session;
 }
 
 function saveNotepad() {
@@ -690,9 +690,9 @@ function saveNotepad() {
   );
   if (notepad1.trim() === "" && notepad2.trim() === "") return;
   const history = notepad1 + "\n" + notepad2;
-  const chatName = document.getElementById("userName").value;
-  saveSession(chatName, history, "notepad");
-  lastSelectedNotebook = chatName;
+  const session = document.getElementById("userName").value;
+  saveSession(session, history, "notepad");
+  lastSelectedNotebook = session;
 }
 
 // Function to load selected chat from dropdown
@@ -719,6 +719,10 @@ function loadSelectedSession() {
   }
 
   updateModelInQueryString(obj.model);
+  const session = document.getElementById("userName");
+  if (session) {
+    session.value = selectedChat;
+  }
 
   try {
     document.querySelector(
