@@ -8,7 +8,7 @@ Just a simple HTML UI for Ollama
 
 ```
 git clone https://github.com/ismaelc/ollama-utility
-cd ollama-ui
+cd ollama-utility
 make
 
 open http://localhost:8000 # in browser
