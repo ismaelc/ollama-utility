@@ -19,3 +19,8 @@ open http://localhost:8000 # in browser
 | Chat | Notepad |
 | --------------------- | --------------------- |
 | ![Chat](ollama-utility-01.png) | ![Notepad](ollama-utility-02.png) |
+
+## Pull latest
+```
+git pull origin main
+```
