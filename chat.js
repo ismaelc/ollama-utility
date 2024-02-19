@@ -308,44 +308,6 @@ function createStopButton() {
   return stopButton;
 }
 
-function handlePostRequest(data, stopButton, responseDiv, responseTextDiv) {
-  postRequest(data, interrupt.signal, "chat")
-    .then(async (response) => {
-      await getResponse(response, (parsedResponse) => {
-        handleResponse(parsedResponse, responseDiv, responseTextDiv);
-      });
-    })
-    .then(() => {
-      stopButton.remove();
-      spinner.remove();
-    })
-    .catch((error) => {
-      if (error !== "Stop button pressed") {
-        console.error(error);
-      }
-      stopButton.remove();
-      spinner.remove();
-    });
-}
-
-function handleResponse(parsedResponse, responseDiv, responseTextDiv) {
-  let word = parsedResponse.message.content;
-  if (parsedResponse.done) {
-    chatHistory.context = parsedResponse.context;
-    let copyButton = createCopyButton(responseDiv.hidden_text);
-    responseDiv.appendChild(copyButton);
-  }
-  if (word != undefined) {
-    if (responseDiv.hidden_text == undefined) {
-      responseDiv.hidden_text = "";
-    }
-    responseDiv.hidden_text += word;
-    responseTextDiv.innerHTML = DOMPurify.sanitize(
-      marked.parse(responseDiv.hidden_text)
-    );
-  }
-}
-
 function createCopyButton(hidden_text) {
   let copyButton = document.createElement("button");
   copyButton.className = "btn btn-secondary copy-button";
@@ -590,8 +552,52 @@ async function submitRequest() {
   const sendButton = document.getElementById("send-button");
   sendButton.insertAdjacentElement("beforebegin", stopButton);
   autoScroller.observe(responseDiv);
-  handlePostRequest(data, stopButton, responseDiv, responseTextDiv);
+
+  // Start the timer
+  let time = 0;
+  const timerLabel = document.getElementById("timer-label");
+  const timer = setInterval(() => {
+    time++;
+    timerLabel.innerText = `Time: ${time}s`;
+  }, 1000);
+
+  handlePostRequest(data, stopButton, responseDiv, responseTextDiv, timer)
   clearUserInput();
+}
+
+function handlePostRequest(data, stopButton, responseDiv, responseTextDiv, timer) {
+  postRequest(data, interrupt.signal, "chat")
+    .then(async (response) => {
+      await getResponse(response, (parsedResponse) => {
+        handleResponse(parsedResponse, responseDiv, responseTextDiv);
+      });
+    })
+    .catch((error) => {
+      console.error(error);
+    })
+    .finally(() => {
+      stopButton.remove();
+      spinner.remove();
+      clearInterval(timer);
+    });
+}
+
+function handleResponse(parsedResponse, responseDiv, responseTextDiv) {
+  let word = parsedResponse.message.content;
+  if (parsedResponse.done) {
+    chatHistory.context = parsedResponse.context;
+    let copyButton = createCopyButton(responseDiv.hidden_text);
+    responseDiv.appendChild(copyButton);
+  }
+  if (word != undefined) {
+    if (responseDiv.hidden_text == undefined) {
+      responseDiv.hidden_text = "";
+    }
+    responseDiv.hidden_text += word;
+    responseTextDiv.innerHTML = DOMPurify.sanitize(
+      marked.parse(responseDiv.hidden_text)
+    );
+  }
 }
 
 async function generateText() {
@@ -609,7 +615,9 @@ async function generateText() {
     system: getSystemText(),
     prompt: input,
     options: {
-      temperature: 0.1,
+      //temperature: 0.1,
+      num_ctx: 8000,
+      num_predict: 32000,
     },
   };
 
@@ -628,6 +636,14 @@ async function generateText() {
   spinner.setAttribute("aria-hidden", "true");
   generateButton.disabled = true;
   generateButton.innerHTML = spinner.outerHTML + " Generating...";
+
+  // Start the timer
+  let time = 0;
+  const timerLabel = document.getElementById("timer-label");
+  const timer = setInterval(() => {
+    time++;
+    timerLabel.innerText = `Time: ${time}s`;
+  }, 1000);
 
   postRequest(data, interrupt.signal)
     .then(async (response) => {
@@ -651,6 +667,9 @@ async function generateText() {
       // Remove spinner and enable the Generate button
       generateButton.innerHTML = "Generate";
       generateButton.disabled = false;
+
+      // Stop the timer
+      clearInterval(timer);
     });
 }
 
