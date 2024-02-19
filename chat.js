@@ -176,10 +176,10 @@ document.querySelector(".gear-icon").addEventListener("click", function () {
 
 document.getElementById("saveSettings").addEventListener("click", function () {
   const temperature = document.getElementById("temperature").value;
-  const num_ct = document.getElementById("num-ct").value;
+  const num_ctx = document.getElementById("num-ct").value;
   const num_predict = document.getElementById("num-predict").value;
   localStorage.setItem("temperature", temperature);
-  localStorage.setItem("num_ct", num_ct);
+  localStorage.setItem("num_ctx", num_ctx);
   localStorage.setItem("num_predict", num_predict);
 
   // Get the modal instance and close it
@@ -192,22 +192,22 @@ document.getElementById("saveSettings").addEventListener("click", function () {
 document
   .getElementById("settingsModal")
   .addEventListener("show.bs.modal", function () {
-    // Load num_ct and num_predict from local storage
+    // Load num_ctx and num_predict from local storage
     let temperature = localStorage.getItem("temperature");
-    let num_ct = localStorage.getItem("num_ct");
+    let num_ctx = localStorage.getItem("num_ctx");
     let num_predict = localStorage.getItem("num_predict");
 
-    // If num_ct or num_predict is not in local storage, assign default values
+    // If num_ctx or num_predict is not in local storage, assign default values
     temperature = temperature || TEMPERATURE;
-    num_ct = num_ct || NUM_CONTEXT;
+    num_ctx = num_ctx || NUM_CONTEXT;
     num_predict = num_predict || NUM_PREDICT;
 
     // Set the values in the input fields
     if (temperature) {
       document.getElementById("temperature").value = temperature;
     }
-    if (num_ct) {
-      document.getElementById("num-ct").value = num_ct;
+    if (num_ctx) {
+      document.getElementById("num-ct").value = num_ctx;
     }
     if (num_predict) {
       document.getElementById("num-predict").value = num_predict;
@@ -248,7 +248,7 @@ function getSelectedModel() {
 
 function getModelOptions() {
   let temperature = localStorage.getItem("temperature");
-  let num_ct = localStorage.getItem("num_ct");
+  let num_ctx = localStorage.getItem("num_ctx");
   let num_predict = localStorage.getItem("num_predict");
 
   // Convert to integer if they are string
@@ -261,11 +261,11 @@ function getModelOptions() {
   }
 
   // Convert to integer if they are string
-  if (typeof num_ct === "string") {
-    num_ct = parseInt(num_ct);
-    if (isNaN(num_ct)) {
-      console.error("num_ct is not a valid integer");
-      num_ct = NUM_CONTEXT;
+  if (typeof num_ctx === "string") {
+    num_ctx = parseInt(num_ctx);
+    if (isNaN(num_ctx)) {
+      console.error("num_ctx is not a valid integer");
+      num_ctx = NUM_CONTEXT;
     }
   }
 
@@ -279,7 +279,7 @@ function getModelOptions() {
 
   return {
     temperature: temperature,
-    num_ctx: num_ct,
+    num_ctx: num_ctx,
     num_predict: num_predict,
   }
 }
@@ -860,9 +860,13 @@ function updateChatListAndSelection(text = "") {
     '<option value="" disabled selected>Select a session</option>';
   let selectedIndex = 0;
   for (let i = 0; i < localStorage.length; i++) {
+    // TODO: Need to move this out of the session names' way
     const key = localStorage.key(i);
     if (key === "host-address") continue;
     if (key === "system-text") continue;
+    if (key === "temperature") continue;
+    if (key === "num_ctx") continue;
+    if (key === "num_predict") continue;
     const option = document.createElement("option");
     option.value = key;
     option.text = key;
