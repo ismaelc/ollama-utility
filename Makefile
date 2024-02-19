@@ -3,8 +3,8 @@ MODEL_NAME = mistral:7b-instruct-v0.2-q4_K_M
 .PHONY: default check_ollama check_model download_resources web_server ollama_server
 
 # Default task that checks for ollama, checks for model, downloads the assets and starts the ollama and web server
-default: check_ollama check_model download_resources
-	@$(MAKE) -j 2 web_server ollama_server
+default: check_ollama download_resources
+	@$(MAKE) -j 2 ollama_server check_model web_server
 
 # Check if ollama is installed
 check_ollama:
