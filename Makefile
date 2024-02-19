@@ -10,7 +10,11 @@ default: check_ollama check_model download_resources
 check_ollama:
 	# Check if ollama is installed, if not install it
 	@if ! command -v ollama > /dev/null; then \
-		curl -fsSL https://ollama.com/install.sh | sh; \
+		if [ `uname` = "Darwin" ]; then \
+			brew install ollama; \
+		else \
+			curl -fsSL https://ollama.com/install.sh | sh; \
+		fi \
 	fi
 
 # Check if model exists
