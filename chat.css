@@ -73,3 +73,8 @@ body {
 #notepad2 {
   padding: 10px;
 }
+
+.gear-icon {
+  margin-left: 8px;
+  margin-right: 8px;
+}

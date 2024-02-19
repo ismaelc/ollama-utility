@@ -25,6 +25,7 @@
         const { encode, decode } = GPTTokenizer_cl100k_base
     </script>
     <!-- <link rel="stylesheet" href="chat.css"> -->
+    <link href="https://cdn.jsdelivr.net/npm/bootstrap-icons@1.7.2/font/bootstrap-icons.css" rel="stylesheet">
 </head>
 
 <body data-bs-theme="dark">
@@ -62,6 +63,7 @@
                     <div class="d-flex align-items-center mb-2">
                         <label for="model-select" class="form-label me-2" style="font-size: smaller;">Model:</label>
                         <select class="form-select" id="model-select" style="width: auto;"></select>
+                        <i class="bi bi-gear-fill gear-icon"></i>
                     </div>
 
                     <div class="d-flex align-items-center mb-2">
@@ -87,7 +89,7 @@
         <div id="scroll-wrapper">
             <div class="card">
                 <div class="text-end">
-                    <label id="timer-label" class="me-2">Time: 0s</label>
+                    <label id="timer-label-chat" class="me-2">Time: 0s</label>
                     <label id="token-counter" class="me-2">Tokens: 0</label>
                     <button id="delete-chat" class="btn btn-danger" type="button">Delete Chat</button>
                     <button id="save-chat" class="btn btn-secondary" type="button" data-bs-toggle="modal"
@@ -100,8 +102,10 @@
         </div>
         <div class="container p-2 card" id="chat-input-area">
             <div class="input-group">
-                <textarea class="form-control" id="user-input" placeholder="Type your message here..." rows="3"></textarea>
-                <button id="send-button" class="btn btn-primary" style="background-color: green; color: white; border: 2px solid green;">Send</button>
+                <textarea class="form-control" id="user-input" placeholder="Type your message here..."
+                    rows="3"></textarea>
+                <button id="send-button" class="btn btn-primary"
+                    style="background-color: green; color: white; border: 2px solid green;">Send</button>
             </div>
         </div>
     </div>
@@ -112,13 +116,15 @@
             <div style="display: flex; justify-content: space-between;"> <!-- Add flexbox layout -->
                 <div> <!-- Wrap buttons in a div -->
                     <button id="stop-generate-button" class="btn btn-danger" type="button">Stop</button>
-                    <button id="generate-button" class="btn btn-primary" type="button" style="background-color: green; color: white; border: 2px solid green;">Generate</button>
+                    <button id="generate-button" class="btn btn-primary" type="button"
+                        style="background-color: green; color: white; border: 2px solid green;">Generate</button>
                 </div>
                 <div class="text-end">
-                    <label id="timer-label" class="me-2">Time: 0s</label>
+                    <label id="timer-label-notepad" class="me-2">Time: 0s</label>
                     <label id="notepad-token-counter" class="me-2">Tokens: 0</label>
                     <button id="delete-notepad" class="btn btn-danger" type="button">Delete Notepad</button>
-                    <button id="save-notepad" class="btn btn-secondary" type="button" data-bs-toggle="modal" data-bs-target="#nameModal">Save Notepad</button>
+                    <button id="save-notepad" class="btn btn-secondary" type="button" data-bs-toggle="modal"
+                        data-bs-target="#nameModal">Save Notepad</button>
                 </div>
             </div>
             <div class="card-body">
@@ -129,7 +135,7 @@
             </div>
         </div>
     </div>
-    
+
 
     <!-- Modal -->
     <div class="modal fade" id="nameModal" tabindex="-1" aria-labelledby="nameModalLabel" aria-hidden="true">
@@ -164,18 +170,51 @@
         </div>
     </div>
 
+    <!-- Settings Modal -->
+    <div class="modal fade" id="settingsModal" tabindex="-1" aria-labelledby="settingsModalLabel" aria-hidden="true">
+        <div class="modal-dialog">
+            <div class="modal-content">
+                <div class="modal-header">
+                    <h5 class="modal-title" id="settingsModalLabel">Settings</h5>
+                    <button type="button" class="btn-close" data-bs-dismiss="modal" aria-label="Close"></button>
+                </div>
+                <div class="modal-body">
+                    <form>
+                        <div class="mb-3">
+                            <label for="temperature" class="form-label">temperature (0 - 1)</label>
+                            <input type="number" class="form-control" id="temperature" placeholder="Enter temperature">
+                        </div>
+                        <div class="mb-3">
+                            <label for="num-ct" class="form-label">num_ctx</label>
+                            <input type="number" class="form-control" id="num-ct" placeholder="Enter num_ctx">
+                        </div>
+                        <div class="mb-3">
+                            <label for="num-predict" class="form-label">num_predict</label>
+                            <input type="number" class="form-control" id="num-predict" placeholder="Enter num_predict">
+                        </div>
+                    </form>
+                </div>
+                <div class="modal-footer">
+                    <button type="button" class="btn btn-secondary" data-bs-dismiss="modal">Close</button>
+                    <button type="button" class="btn btn-primary" id="saveSettings">Save changes</button>
+                </div>
+            </div>
+        </div>
+    </div>
+
     <!-- Roundabout way of bypassing the cache during development -->
     <script>
-    var head = document.getElementsByTagName('head')[0];
-    ['api.js', 'chat.js'].forEach(function(src) {
-        var script = document.createElement('script');
-        script.src = src + '?t=' + Math.floor(Math.random() * 1000000);
-        head.appendChild(script);
-    });
-    var link = document.createElement('link');
-    link.rel = 'stylesheet';
-    link.href = 'chat.css?t=' + Math.floor(Math.random() * 1000000);
-    head.appendChild(link);
+        var head = document.getElementsByTagName('head')[0];
+        ['api.js', 'chat.js'].forEach(function (src) {
+            var script = document.createElement('script');
+            // script.type = 'module';
+            script.src = src + '?t=' + Math.floor(Math.random() * 1000000);
+            head.appendChild(script);
+        });
+        var link = document.createElement('link');
+        link.rel = 'stylesheet';
+        link.href = 'chat.css?t=' + Math.floor(Math.random() * 1000000);
+        head.appendChild(link);
     </script>
 
 </body>

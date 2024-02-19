@@ -24,6 +24,10 @@ const deleteIcon = `<svg xmlns="http://www.w3.org/2000/svg" width="16" height="1
 <path fill-rule="evenodd" d="M14.5 3a1 1 0 0 1-1 1H13v9a2 2 0 0 1-2 2H5a2 2 0 0 1-2-2V4h-.5a1 1 0 0 1-1-1V2a1 1 0 0 1 1-1H4a1 1 0 0 1 1-1h6a1 1 0 0 1 1 1h1.5a1 1 0 0 1 1 1v1zM4.118 4L4 4.059V13a1 1 0 0 0 1 1h6a1 1 0 0 0 1-1V4.06l-.118-.06H4.118zM2.5 3V2h11v1h-11z"/>
 </svg>`;
 
+const TEMPERATURE = 0.1;
+const NUM_CONTEXT = 8000;
+const NUM_PREDICT = 32000;
+
 // -------- GLOBALS --------
 // change settings of marked from default to remove deprecation warnings
 // see conversation here: https://github.com/markedjs/marked/issues/2793
@@ -70,15 +74,17 @@ document.getElementById("user-input").addEventListener("keydown", function (e) {
   }
 });
 
-document.getElementById("delete-chat").addEventListener("click", function() {
+document.getElementById("delete-chat").addEventListener("click", function () {
   deleteSession("chat-select");
   document.getElementById("chat-history").innerHTML = "";
 });
-document.getElementById("delete-notepad").addEventListener("click", function() {
-  deleteSession("chat-select");
-  document.getElementById("notepad1").value = "";
-  document.getElementById("notepad2").value = "";
-});
+document
+  .getElementById("delete-notepad")
+  .addEventListener("click", function () {
+    deleteSession("chat-select");
+    document.getElementById("notepad1").value = "";
+    document.getElementById("notepad2").value = "";
+  });
 document.getElementById("saveName").addEventListener("click", function () {
   const selectedOption = document.querySelector(
     'input[name="utilityOption"]:checked'
@@ -92,9 +98,6 @@ document.getElementById("saveName").addEventListener("click", function () {
 document
   .getElementById("chat-select")
   .addEventListener("change", loadSelectedSession);
-document
-  .getElementById("host-address")
-  .addEventListener("change", setHostAddress);
 document.getElementById("export-button").addEventListener("click", exportChat);
 document.getElementById("import-button").addEventListener("click", importChat);
 document
@@ -138,13 +141,13 @@ document.addEventListener("scroll", (event) => {
 });
 
 const chatHistory = document.getElementById("chat-history");
-const observer = new MutationObserver(function() {
+const observer = new MutationObserver(function () {
   updateTokenCounter("chat-history", "token-counter");
 });
 observer.observe(chatHistory, { childList: true, subtree: true });
 
 const notepadPanels = document.getElementById("chat-history");
-const observerPad = new MutationObserver(function() {
+const observerPad = new MutationObserver(function () {
   updateTokenCounter("notepad1", "notepad-token-counter");
 });
 observerPad.observe(notepadPanels, { childList: true, subtree: true });
@@ -165,6 +168,51 @@ for (var i = 0; i < radios.length; i++) {
     updateChatListAndSelection(selection);
   });
 }
+
+document.querySelector(".gear-icon").addEventListener("click", function () {
+  let modal = new bootstrap.Modal(document.getElementById("settingsModal"));
+  modal.show();
+});
+
+document.getElementById("saveSettings").addEventListener("click", function () {
+  const temperature = document.getElementById("temperature").value;
+  const num_ct = document.getElementById("num-ct").value;
+  const num_predict = document.getElementById("num-predict").value;
+  localStorage.setItem("temperature", temperature);
+  localStorage.setItem("num_ct", num_ct);
+  localStorage.setItem("num_predict", num_predict);
+
+  // Get the modal instance and close it
+  let settingsModal = bootstrap.Modal.getInstance(
+    document.getElementById("settingsModal")
+  );
+  settingsModal.hide();
+});
+
+document
+  .getElementById("settingsModal")
+  .addEventListener("show.bs.modal", function () {
+    // Load num_ct and num_predict from local storage
+    let temperature = localStorage.getItem("temperature");
+    let num_ct = localStorage.getItem("num_ct");
+    let num_predict = localStorage.getItem("num_predict");
+
+    // If num_ct or num_predict is not in local storage, assign default values
+    temperature = temperature || TEMPERATURE;
+    num_ct = num_ct || NUM_CONTEXT;
+    num_predict = num_predict || NUM_PREDICT;
+
+    // Set the values in the input fields
+    if (temperature) {
+      document.getElementById("temperature").value = temperature;
+    }
+    if (num_ct) {
+      document.getElementById("num-ct").value = num_ct;
+    }
+    if (num_predict) {
+      document.getElementById("num-predict").value = num_predict;
+    }
+  });
 
 // -------- HELPER FUNCTIONS --------
 
@@ -198,6 +246,44 @@ function getSelectedModel() {
   return document.getElementById("model-select").value;
 }
 
+function getModelOptions() {
+  let temperature = localStorage.getItem("temperature");
+  let num_ct = localStorage.getItem("num_ct");
+  let num_predict = localStorage.getItem("num_predict");
+
+  // Convert to integer if they are string
+  if (typeof temperature === "string") {
+    temperature = parseFloat(temperature);
+    if (isNaN(temperature)) {
+      console.error("temperature is not a valid float");
+      temperature = TEMPERATURE;
+    }
+  }
+
+  // Convert to integer if they are string
+  if (typeof num_ct === "string") {
+    num_ct = parseInt(num_ct);
+    if (isNaN(num_ct)) {
+      console.error("num_ct is not a valid integer");
+      num_ct = NUM_CONTEXT;
+    }
+  }
+
+  if (typeof num_predict === "string") {
+    num_predict = parseInt(num_predict);
+    if (isNaN(num_predict)) {
+      console.error("num_predict is not a valid integer");
+      num_predict = NUM_PREDICT;
+    }
+  }
+
+  return {
+    temperature: temperature,
+    num_ctx: num_ct,
+    num_predict: num_predict,
+  }
+}
+
 // Function to get the system text
 function getSystemText() {
   return document.getElementById("system-text").value;
@@ -217,22 +303,20 @@ function isValidInput(input) {
 
 function prepareData(input, parsedHistory) {
   const selectedModel = getSelectedModel();
+  const modelOptions = getModelOptions();
   const system = {
-    "role": "system",
-    "content": getSystemText()
-  }
+    role: "system",
+    content: getSystemText(),
+  };
   let prompt = parsedHistory.push({
-    "role": "user",
-    "content": input
-  })
+    role: "user",
+    content: input,
+  });
   prompt = [system].concat(parsedHistory);
   return {
     model: selectedModel,
     messages: prompt,
-    options: {
-      //stop: ["[USER]", "[ASSISTANT]"],
-      temperature: 0.1,
-    },
+    options: modelOptions,
   };
 }
 
@@ -268,7 +352,7 @@ function createResponseDiv() {
   responseDiv.id = "response-" + Date.now();
   let responseDeleteButton = createDeleteButton(responseDiv.id, (response) => {
     const stopButton = document.getElementById("stop-chat-button");
-    if(stopButton !== null) {
+    if (stopButton !== null) {
       stopButton.click();
     }
     chatHistory.removeChild(response);
@@ -348,8 +432,8 @@ function parseChatHistory(htmlString) {
     try {
       // Add the user message to the output array
       output.push({
-        "role": "user",
-        "content": userMessages[i].firstChild.textContent.trim()
+        role: "user",
+        content: userMessages[i].firstChild.textContent.trim(),
       });
     } catch (error) {
       console.info("Error while processing user message: ", error);
@@ -358,8 +442,8 @@ function parseChatHistory(htmlString) {
     try {
       // Add the assistant response to the output array
       output.push({
-        "role": "assistant",
-        "content": assistantResponses[i].firstChild.textContent.trim()
+        role: "assistant",
+        content: assistantResponses[i].firstChild.textContent.trim(),
       });
     } catch (error) {
       console.info("Error while processing assistant response: ", error);
@@ -428,9 +512,9 @@ function updateTokenCounter(element, counterId) {
   const elementAreaToCount = document.getElementById(element);
   let textToCount;
 
-  if (elementAreaToCount.tagName.toLowerCase() === 'textarea') {
+  if (elementAreaToCount.tagName.toLowerCase() === "textarea") {
     textToCount = elementAreaToCount.value;
-  } else if (elementAreaToCount.tagName.toLowerCase() === 'div') {
+  } else if (elementAreaToCount.tagName.toLowerCase() === "div") {
     textToCount = elementAreaToCount.innerText;
   }
 
@@ -555,17 +639,23 @@ async function submitRequest() {
 
   // Start the timer
   let time = 0;
-  const timerLabel = document.getElementById("timer-label");
+  const timerLabel = document.getElementById("timer-label-chat");
   const timer = setInterval(() => {
     time++;
     timerLabel.innerText = `Time: ${time}s`;
   }, 1000);
 
-  handlePostRequest(data, stopButton, responseDiv, responseTextDiv, timer)
+  handlePostRequest(data, stopButton, responseDiv, responseTextDiv, timer);
   clearUserInput();
 }
 
-function handlePostRequest(data, stopButton, responseDiv, responseTextDiv, timer) {
+function handlePostRequest(
+  data,
+  stopButton,
+  responseDiv,
+  responseTextDiv,
+  timer
+) {
   postRequest(data, interrupt.signal, "chat")
     .then(async (response) => {
       await getResponse(response, (parsedResponse) => {
@@ -610,15 +700,13 @@ async function generateText() {
   document.getElementById("notepad2").value = "";
 
   const selectedModel = getSelectedModel();
+  const modelOptions = getModelOptions()
+
   const data = {
     model: selectedModel,
     system: getSystemText(),
     prompt: input,
-    options: {
-      //temperature: 0.1,
-      num_ctx: 8000,
-      num_predict: 32000,
-    },
+    options: modelOptions,
   };
 
   interrupt = new AbortController();
@@ -639,7 +727,7 @@ async function generateText() {
 
   // Start the timer
   let time = 0;
-  const timerLabel = document.getElementById("timer-label");
+  const timerLabel = document.getElementById("timer-label-notepad");
   const timer = setInterval(() => {
     time++;
     timerLabel.innerText = `Time: ${time}s`;
@@ -729,7 +817,9 @@ function loadSelectedSession() {
   const obj = JSON.parse(localStorage.getItem(selectedChat));
 
   if (obj.selectedOption === "chat") {
-    document.getElementById("chat-history").innerHTML = decodeURIComponent(obj.history);
+    document.getElementById("chat-history").innerHTML = decodeURIComponent(
+      obj.history
+    );
     document.getElementById("chat-container").style.display = "block";
     document.getElementById("notepad-container").style.display = "none";
     lastSelectedChat = selectedChat;
@@ -797,6 +887,10 @@ window.onload = () => {
   autoFocusInput();
   loadSystemText(); // Load system text from local storage
   checkTokenCount();
+
+  document
+    .getElementById("host-address")
+    .addEventListener("change", setHostAddress);
 
   // Check if chat option is selected
   const selectedOption = document.querySelector(
