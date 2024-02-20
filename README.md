@@ -24,3 +24,13 @@ open http://localhost:8000 # in browser
 ```
 git pull origin main
 ```
+
+## Kill ollama serve
+```
+pkill -f "ollama serve"
+```
+
+## Kill process hogging port 8000
+```
+lsof -ti:8000 | xargs kill
+```
