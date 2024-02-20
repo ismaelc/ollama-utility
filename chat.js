@@ -777,11 +777,13 @@ function saveSession(sessionName, history, selectedOption) {
   bootstrapModal.hide();
 
   const model = getSelectedModel();
+  const systemText = getSystemText(); // Get the system text
   localStorage.setItem(
     sessionName,
     JSON.stringify({
       history: history,
       model: model,
+      systemText: systemText, // Save the system text
       selectedOption: selectedOption,
     })
   );
@@ -835,6 +837,8 @@ function loadSelectedSession() {
     updateTokenCounter("notepad1", "notepad-token-counter");
     lastSelectedNotebook = selectedChat;
   }
+
+  document.getElementById("system-text").value = obj.systemText; // Set the system text
 
   updateModelInQueryString(obj.model);
   const session = document.getElementById("userName");
