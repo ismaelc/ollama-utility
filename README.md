@@ -18,7 +18,7 @@ open http://localhost:8000 # in browser
 
 | Chat | Notepad |
 | --------------------- | --------------------- |
-| ![Chat](ollama-utility-01.png) | ![Notepad](ollama-utility-02.png) |
+| ![Chat](images/ollama-utility-01.png) | ![Notepad](images/ollama-utility-02.png) |
 
 ## Pull latest
 ```
