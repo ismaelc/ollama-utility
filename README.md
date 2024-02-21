@@ -44,6 +44,8 @@ make
 
 ### Windows
 
+Download the Ollama Windows client from https://ollama.com/download/windows
+
 Open PowerShell as Administrator and run:
 
 ```powershell
