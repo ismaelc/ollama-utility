@@ -17,7 +17,7 @@ A simple HTML UI for Ollama
 git clone https://github.com/ismaelc/ollama-utility
 cd ollama-utility
 make
-open http://localhost:8000 # Open in browser
+(open http://localhost:8000) # Open in browser
 ```
 
 ### Mac/Linux (Without Git)
