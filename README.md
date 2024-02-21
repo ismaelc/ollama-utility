@@ -29,7 +29,7 @@ curl -L https://github.com/ismaelc/ollama-utility/archive/main.zip -o ollama-uti
 unzip ollama-utility.zip
 cd ollama-utility-main
 make
-open http://localhost:8000 # Open in browser
+(open http://localhost:8000) # Open in browser
 ```
 
 Or, if `curl` is not available, use `wget`:
@@ -39,7 +39,7 @@ wget https://github.com/ismaelc/ollama-utility/archive/main.zip -O ollama-utilit
 unzip ollama-utility.zip
 cd ollama-utility-main
 make
-open http://localhost:8000 # Open in browser
+(open http://localhost:8000) # Open in browser
 ```
 
 ### Windows
@@ -55,6 +55,9 @@ Set-ExecutionPolicy RemoteSigned -Scope CurrentUser -Force
 # Download and run RunOllamaUtility.ps1
 Invoke-WebRequest "https://raw.githubusercontent.com/ismaelc/ollama-utility/main/windows/RunOllamaUtility.ps1" -OutFile "RunOllamaUtility.ps1"
 .\RunOllamaUtility.ps1
+
+# Open in browser
+(open http://localhost:8000)
 ```
 
 **Note:** Review scripts before running. `Set-ExecutionPolicy` changes policy to allow script execution, affecting only the current user.
