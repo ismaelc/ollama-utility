@@ -6,15 +6,24 @@ MODEL_NAME = mistral:7b-instruct-v0.2-q4_K_M
 default: check_ollama download_resources
 	@$(MAKE) -j 2 ollama_server check_model web_server
 
-# Check if ollama is installed
+# Check if ollama is installed and update it
 check_ollama:
-	# Check if ollama is installed, if not install it
 	@if ! command -v ollama > /dev/null; then \
+		echo "Installing ollama..."; \
 		if [ `uname` = "Darwin" ]; then \
 			brew install ollama; \
+			brew upgrade ollama; \
 		else \
 			curl -fsSL https://ollama.com/install.sh | sh; \
-		fi \
+		fi; \
+	else \
+		echo "Checking for ollama updates..."; \
+		if [ `uname` = "Darwin" ]; then \
+			brew upgrade ollama; \
+		else \
+			echo "Updating ollama on non-Darwin systems..."; \
+			curl -fsSL https://ollama.com/install.sh | sh; \
+		fi; \
 	fi
 
 # Check if model exists
