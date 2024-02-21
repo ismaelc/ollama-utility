@@ -66,7 +66,7 @@ Invoke-WebRequest "https://raw.githubusercontent.com/ismaelc/ollama-utility/main
 
 ## Maintenance Commands
 
-Update to latest version:
+### Update to latest version:
 
 ```bash
 git pull origin main
@@ -74,13 +74,21 @@ git pull origin main
 
 Or, if Git is not installed, re-download the latest version as described above.
 
-Terminate running ollama service:
+### Get new models:
+
+Go to https://ollama.com/library and click on a model. Click `Tags`
+```
+ollama pull gemma:7b-instruct-q4_K_M
+```
+Refresh http://localhost:8000 to update the model dropdown selection
+
+### Terminate running ollama service:
 
 ```bash
 pkill -f "ollama serve"
 ```
 
-Free up port 8000:
+### Free up port 8000:
 
 ```bash
 lsof -ti:8000 | xargs kill
