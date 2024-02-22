@@ -63,7 +63,7 @@ ollama_server:
 	@echo "Checking if ollama serve is already running..."
 	@PID=$$(pgrep -f "ollama serve"); if [ -n "$$PID" ]; then echo "Killing existing ollama server process $$PID"; kill $$PID; fi
 	@echo "Starting ollama server..."
-	@ollama serve &
+	@export OLLAMA_ORIGINS=http://localhost:$(WEB_SERVER_PORT); ollama serve &
 
 # Python Server
 python_server:
