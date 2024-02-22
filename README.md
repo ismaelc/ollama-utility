@@ -11,7 +11,7 @@ A simple HTML UI for Ollama
 
 ## Setup/Usage
 
-### Mac/Linux (With Git)
+#### Mac/Linux (With Git)
 
 ```bash
 git clone https://github.com/ismaelc/ollama-utility
@@ -20,7 +20,7 @@ make
 (open http://localhost:8000) # Open in browser
 ```
 
-### Mac/Linux (Without Git)
+#### Mac/Linux (Without Git)
 
 Download and extract the utility directly:
 
@@ -42,7 +42,7 @@ make
 (open http://localhost:8000) # Open in browser
 ```
 
-### Windows
+#### Windows
 
 Download the Ollama Windows client from https://ollama.com/download/windows
 
@@ -66,7 +66,7 @@ Invoke-WebRequest "https://raw.githubusercontent.com/ismaelc/ollama-utility/main
 
 ## Maintenance Commands
 
-### Update to latest version:
+#### Update to latest version:
 
 ```bash
 git pull origin main
@@ -74,7 +74,7 @@ git pull origin main
 
 Or, if Git is not installed, re-download the latest version as described above.
 
-### Get new models:
+#### Get new models:
 
 Go to https://ollama.com/library and click on a model. Click `Tags`
 ```
@@ -82,13 +82,13 @@ ollama pull gemma:7b-instruct-q4_K_M
 ```
 Refresh http://localhost:8000 to update the model dropdown selection
 
-### Terminate running ollama service:
+#### Terminate running ollama service:
 
 ```bash
 pkill -f "ollama serve"
 ```
 
-### Free up port 8000:
+#### Free up port 8000:
 
 ```bash
 lsof -ti:8000 | xargs kill
