@@ -616,7 +616,7 @@ async function populateModels() {
   } catch (error) {
     document.getElementById("errorText").innerHTML = DOMPurify.sanitize(
       marked.parse(
-        `Ollama-ui was unable to communitcate with Ollama due to the following error:\n\n` +
+        `ollama-utility was unable to communitcate with Ollama due to the following error:\n\n` +
           `\`\`\`${error.message}\`\`\`\n\n---------------------\n` +
           faqString
       )

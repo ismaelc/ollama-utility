@@ -67,6 +67,7 @@ function Start-OllamaServer {
     $ollamaProcess = Get-Process | Where-Object {$_.ProcessName -eq "ollama"}
     if (-not $ollamaProcess) {
         Write-Host "Starting Ollama Server..."
+        $env:OLLAMA_ORIGINS = "http://localhost:8000"
         Start-Process ollama -ArgumentList "serve"
     }
 }
