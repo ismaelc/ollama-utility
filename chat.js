@@ -75,16 +75,31 @@ document.getElementById("user-input").addEventListener("keydown", function (e) {
 });
 
 document.getElementById("delete-chat").addEventListener("click", function () {
-  deleteSession("chat-select");
-  document.getElementById("chat-history").innerHTML = "";
-});
-document
-  .getElementById("delete-notepad")
-  .addEventListener("click", function () {
+  const selectedSession = document.getElementById("chat-select").value;
+  if (selectedSession) {
+    if (confirm("Are you sure you want to delete this chat with a saved session?")) {
+      deleteSession("chat-select");
+      document.getElementById("chat-history").innerHTML = "";
+    }
+  } else {
+    deleteSession("chat-select");
+    document.getElementById("chat-history").innerHTML = "";
+  }
+}); 
+document.getElementById("delete-notepad").addEventListener("click", function () {
+  const selectedSession = document.getElementById("chat-select").value;
+  if (selectedSession) {
+    if (confirm("Are you sure you want to delete this notepad with a saved session?")) {
+      deleteSession("chat-select");
+      document.getElementById("notepad1").value = "";
+      document.getElementById("notepad2").value = "";
+    }
+  } else {
     deleteSession("chat-select");
     document.getElementById("notepad1").value = "";
     document.getElementById("notepad2").value = "";
-  });
+  }
+});
 document.getElementById("saveName").addEventListener("click", function () {
   const selectedOption = document.querySelector(
     'input[name="utilityOption"]:checked'
