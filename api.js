@@ -47,7 +47,7 @@ if (rebuildRules) {
 }
 
 function setHostAddress() {
-  ollamaBaseUrl = document.getElementById("host-address").value;
+  ollamaBaseUrl = document.querySelector("#settingsModal #host-address").value;
   localStorage.setItem("host-address", ollamaBaseUrl);
   populateModels(); // Assuming this function refreshes model list or similar
   if (rebuildRules) {

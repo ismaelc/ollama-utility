@@ -78,3 +78,35 @@ body {
   margin-left: 8px;
   margin-right: 8px;
 }
+
+.form-check {
+  margin-bottom: 10px; /* adjust spacing as needed */
+}
+
+/* Add this new CSS */
+#ollama-panel .row > .col-md-8 {
+  display: flex;
+  flex-direction: column;
+}
+
+#chat-select {
+  flex-grow: 1;
+}
+
+#model-controls {
+  padding-top: 20px; /* adjust the value as needed */
+  margin-bottom: -1rem;
+}
+
+#session-controls {
+  margin-top: -1rem;
+  margin-bottom: 1rem;
+}
+
+#import-button {
+  margin-right: -3px; /* adjust the value as needed */
+}
+
+#export-button {
+  margin-left: -3px; /* adjust the value as needed */
+}

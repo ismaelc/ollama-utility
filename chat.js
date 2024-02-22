@@ -912,6 +912,11 @@ window.onload = () => {
   loadSystemText(); // Load system text from local storage
   checkTokenCount();
 
+  // Ensure the UI reflects the current Ollama base URL
+  if (document.querySelector("#settingsModal #host-address")) {
+    document.querySelector("#settingsModal #host-address").value = ollamaBaseUrl;
+  }
+
   document
     .getElementById("host-address")
     .addEventListener("change", setHostAddress);
