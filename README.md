@@ -62,7 +62,7 @@ Invoke-WebRequest "https://raw.githubusercontent.com/ismaelc/ollama-utility/main
 (open http://localhost:8000)
 ```
 
-**Note:** Review scripts before running. `Set-ExecutionPolicy` changes policy to allow script execution, affecting only the current user.
+If `RunOllamaUtility.ps1` indicates you need Python, simply type "Python" in the same Terminal to open up Microsoft Store where you can get/install Python from.
 
 ## Maintenance Commands
 
@@ -92,4 +92,9 @@ pkill -f "ollama serve"
 
 ```bash
 lsof -ti:8000 | xargs kill
+```
+
+or in Powershell...
+```bash
+Get-NetTCPConnection | Where-Object { $_.LocalPort -eq 8000 } | Select-Object -ExpandProperty OwningProcess | ForEach-Object { Stop-Process -Id $_ -Force }
 ```
