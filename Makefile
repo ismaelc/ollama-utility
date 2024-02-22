@@ -22,10 +22,6 @@ check_ollama:
 		echo "Checking for ollama updates..."; \
 		if [ `uname` = "Darwin" ]; then \
 			brew upgrade ollama; \
-		else \
-			echo "Updating ollama on non-Darwin systems..."; \
-			curl -fsSL https://ollama.com/install.sh | sh; \
-		fi; \
 	fi
 
 # Check if model exists
