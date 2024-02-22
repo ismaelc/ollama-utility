@@ -25,13 +25,6 @@ check_ollama:
 		fi \
 	fi
 
-# Check if model exists
-check_model:
-	# Check if model exists, if not pull it
-	@if ! ollama list | grep -q "$(MODEL_NAME)"; then \
-		ollama pull $(MODEL_NAME); \
-	fi
-
 # Check if Python is installed and install it if not
 check_python:
 	# Check if Python is installed and install it if not
@@ -47,13 +40,19 @@ check_python:
 		echo "Python is already installed."; \
 	fi
 
-# Web Server
-web_server:
-	# Kill process using port $(WEB_SERVER_PORT) if exists
-	@echo "Checking for any process using port $(WEB_SERVER_PORT)..."
-	@PID=$$(lsof -ti:$(WEB_SERVER_PORT)); if [ -n "$$PID" ]; then echo "Killing process $$PID using port $(WEB_SERVER_PORT)"; kill -9 $$PID || echo "Could not kill process $$PID. Operation not permitted"; fi
-	@echo "Starting web server on port $(WEB_SERVER_PORT)..."
-	@python3 -m http.server $(WEB_SERVER_PORT) --bind 127.0.0.1
+# Task to download resources
+download_resources:
+	# Check if resources directory exists, if not create it
+	@if [ ! -d "resources" ]; then \
+		mkdir -p ./resources/ && \
+		cd ./resources/ && \
+		curl -O https://cdn.jsdelivr.net/npm/bootstrap@5.3.1/dist/css/bootstrap.min.css && \
+		curl -O https://cdn.jsdelivr.net/npm/bootstrap@5.3.1/dist/js/bootstrap.bundle.min.js && \
+		curl -O https://cdn.jsdelivr.net/npm/marked@6.0.0/marked.min.js && \
+		curl -O https://cdn.jsdelivr.net/npm/dompurify@3.0.5/dist/purify.min.js; \
+	fi
+	# Check SHA-256 hash
+	@shasum -a 256 -c resources.hash || exit 1
 
 # Ollama Server
 ollama_server:
@@ -69,6 +68,13 @@ ollama_server:
 		ollama serve & \
 	fi
 
+# Check if model exists
+check_model:
+	# Check if model exists, if not pull it
+	@if ! ollama list | grep -q "$(MODEL_NAME)"; then \
+		ollama pull $(MODEL_NAME); \
+	fi
+
 # Python Server
 python_server:
 	# Kill process using port $(PYTHON_SERVER_PORT) if exists
@@ -77,19 +83,13 @@ python_server:
 	@echo "Starting Python server on port $(PYTHON_SERVER_PORT)..."
 	@python3 server.py &
 
-# Task to download resources
-download_resources:
-	# Check if resources directory exists, if not create it
-	@if [ ! -d "resources" ]; then \
-		mkdir -p ./resources/ && \
-		cd ./resources/ && \
-		curl -O https://cdn.jsdelivr.net/npm/bootstrap@5.3.1/dist/css/bootstrap.min.css && \
-		curl -O https://cdn.jsdelivr.net/npm/bootstrap@5.3.1/dist/js/bootstrap.bundle.min.js && \
-		curl -O https://cdn.jsdelivr.net/npm/marked@6.0.0/marked.min.js && \
-		curl -O https://cdn.jsdelivr.net/npm/dompurify@3.0.5/dist/purify.min.js; \
-	fi
-	# Check SHA-256 hash
-	@shasum -a 256 -c resources.hash || exit 1
+# Web Server
+web_server:
+	# Kill process using port $(WEB_SERVER_PORT) if exists
+	@echo "Checking for any process using port $(WEB_SERVER_PORT)..."
+	@PID=$$(lsof -ti:$(WEB_SERVER_PORT)); if [ -n "$$PID" ]; then echo "Killing process $$PID using port $(WEB_SERVER_PORT)"; kill -9 $$PID || echo "Could not kill process $$PID. Operation not permitted"; fi
+	@echo "Starting web server on port $(WEB_SERVER_PORT)..."
+	@python3 -m http.server $(WEB_SERVER_PORT) --bind 127.0.0.1
 
 clean:
 	@rm -rf ./resources
