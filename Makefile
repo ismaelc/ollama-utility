@@ -54,14 +54,14 @@ check_python:
 web_server:
 	# Kill process using port $(WEB_SERVER_PORT) if exists
 	@echo "Checking for any process using port $(WEB_SERVER_PORT)..."
-	@PID=$$(lsof -ti:$(WEB_SERVER_PORT)); if [ -n "$$PID" ]; then echo "Killing process $$PID using port $(WEB_SERVER_PORT)"; sudo kill $$PID; || echo "Could not kill process $$PID. Operation not permitted"; fi
+	@PID=$$(lsof -ti:$(WEB_SERVER_PORT)); if [ -n "$$PID" ]; then echo "Killing process $$PID using port $(WEB_SERVER_PORT)"; sudo kill $$PID || echo "Could not kill process $$PID. Operation not permitted"; fi
 	@echo "Starting web server on port $(WEB_SERVER_PORT)..."
 	@python3 -m http.server $(WEB_SERVER_PORT) --bind 127.0.0.1
 
 # Ollama Server
 ollama_server:
 	@echo "Checking if ollama serve is already running..."
-	@PID=$$(pgrep -f "ollama serve"); if [ -n "$$PID" ]; then echo "Killing existing ollama server process $$PID"; sudo kill $$PID; || echo "Could not kill process $$PID. Operation not permitted"; fi
+	@PID=$$(pgrep -f "ollama serve"); if [ -n "$$PID" ]; then echo "Killing existing ollama server process $$PID"; sudo kill $$PID || echo "Could not kill process $$PID. Operation not permitted"; fi
 	@echo "Starting ollama server..."
 	@export OLLAMA_ORIGINS=http://localhost:$(WEB_SERVER_PORT); ollama serve &
 
