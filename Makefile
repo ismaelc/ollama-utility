@@ -22,6 +22,7 @@ check_ollama:
 		echo "Checking for ollama updates..."; \
 		if [ `uname` = "Darwin" ]; then \
 			brew upgrade ollama; \
+		fi \
 	fi
 
 # Check if model exists
