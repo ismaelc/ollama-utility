@@ -25,7 +25,7 @@ const deleteIcon = `<svg xmlns="http://www.w3.org/2000/svg" width="16" height="1
 </svg>`;
 
 const TEMPERATURE = 0.1;
-const NUM_CONTEXT = 8000;
+const NUM_CONTEXT = 32768;
 const NUM_PREDICT = 32000;
 
 // -------- GLOBALS --------
@@ -281,7 +281,7 @@ function getModelOptions() {
     temperature: temperature,
     num_ctx: num_ctx,
     num_predict: num_predict,
-  }
+  };
 }
 
 // Function to get the system text
@@ -385,9 +385,19 @@ function createStopButton() {
   stopButton.id = "stop-chat-button";
   stopButton.className = "btn btn-danger";
   stopButton.innerHTML = "Stop";
-  stopButton.onclick = (e) => {
+  stopButton.onclick = async (e) => {
     e.preventDefault();
     interrupt.abort("Stop button pressed");
+    try {
+      // Call killOllama to terminate the Ollama process
+      await killOllama();
+      // Then call startOllama to restart the Ollama process
+      await startOllama();
+
+      console.log("Ollama process restarted successfully.");
+    } catch (err) {
+      console.error(err);
+    }
   };
   return stopButton;
 }
@@ -700,7 +710,7 @@ async function generateText() {
   document.getElementById("notepad2").value = "";
 
   const selectedModel = getSelectedModel();
-  const modelOptions = getModelOptions()
+  const modelOptions = getModelOptions();
 
   const data = {
     model: selectedModel,
@@ -711,9 +721,15 @@ async function generateText() {
 
   interrupt = new AbortController();
   let stopButton = document.getElementById("stop-generate-button");
-  stopButton.onclick = (e) => {
+  stopButton.onclick = async (e) => {
     e.preventDefault();
     interrupt.abort("Stop button pressed");
+    // Call killOllama to terminate the Ollama process
+    await killOllama();
+    // Then call startOllama to restart the Ollama process
+    await startOllama();
+
+    console.log("Ollama process restarted successfully.");
   };
 
   // Create spinner and add it next to the Generate button
