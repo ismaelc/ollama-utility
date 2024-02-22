@@ -6,7 +6,7 @@ PYTHON_SERVER_PORT = 8001
 
 # Default task that checks for ollama, checks for model, downloads the assets and starts the ollama, web, and Python servers
 default: check_ollama check_python download_resources
-	@$(MAKE) -j 3 ollama_server check_model web_server python_server
+	@$(MAKE) ollama_server check_model python_server web_server 
 
 # Check if ollama is installed and update it
 check_ollama:

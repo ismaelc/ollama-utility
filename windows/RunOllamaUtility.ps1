@@ -6,10 +6,17 @@ function Default-Task {
         Write-Host "Ollama is not installed. Aborting."
         return
     }
+    
+
+    if (-not (Check-Python)) {
+        Write-Host "Python is not installed. Aborting."
+        return
+    }
 
     Download-Resources
     Start-OllamaServer
     Check-Model
+    Start-PythonServer
     Start-WebServer
 }
 
@@ -22,35 +29,13 @@ function Check-Ollama {
     return $true
 }
 
-# Check if model exists
-function Check-Model {
-    # Check if model exists
-    $modelExists = (ollama list) -match $ModelName
-    if (-not $modelExists) {
-        Write-Host "Model $ModelName not found. Pulling..."
-        ollama pull $ModelName
-    }
-}
-
-# Start Web Server
-function Start-WebServer {
-    Write-Host "Starting Web Server..."
-    $ollamaUtilityDir = Join-Path $env:USERPROFILE "ollama-utility"
-    if (-not (Test-Path $ollamaUtilityDir -PathType Container)) {
-        Write-Host "Ollama utility directory not found. Exiting."
-        return
-    }
-    Set-Location $ollamaUtilityDir
-    python -m http.server --bind 127.0.0.1
-}
-
-# Start Ollama Server
-function Start-OllamaServer {
-    # Check if ollama serve is already running, if not start it
-    $ollamaProcess = Get-Process | Where-Object {$_.ProcessName -eq "ollama"}
-    if (-not $ollamaProcess) {
-        Write-Host "Starting Ollama Server..."
-        Start-Process ollama -ArgumentList "serve"
+# Check if Python is installed
+function Check-Python {
+    if (-not (Get-Command python3 -ErrorAction SilentlyContinue)) {
+        return $false
+    } else {
+        # Write-Host "Python is already installed."
+        return $true
     }
 }
 
@@ -71,8 +56,46 @@ function Download-Resources {
     }
 
     # Check SHA-256 hash
-    Write-Host "Checking SHA-256 hash..."
+    # Write-Host "Checking SHA-256 hash..."
     # Your SHA-256 checking code goes here
+}
+
+# Start Ollama Server
+function Start-OllamaServer {
+    # Check if ollama serve is already running, if not start it
+    $ollamaProcess = Get-Process | Where-Object {$_.ProcessName -eq "ollama"}
+    if (-not $ollamaProcess) {
+        Write-Host "Starting Ollama Server..."
+        Start-Process ollama -ArgumentList "serve"
+    }
+}
+
+# Check if model exists
+function Check-Model {
+    # Check if model exists
+    $modelExists = (ollama list) -match $ModelName
+    if (-not $modelExists) {
+        Write-Host "Model $ModelName not found. Pulling..."
+        ollama pull $ModelName
+    }
+}
+
+# Start Python Server
+function Start-PythonServer {
+    Write-Host "Starting Python Server..."
+    Start-Process python3 -ArgumentList "server.py"
+}
+
+# Start Web Server
+function Start-WebServer {
+    Write-Host "Starting Web Server..."
+    $ollamaUtilityDir = Join-Path $env:USERPROFILE "ollama-utility"
+    if (-not (Test-Path $ollamaUtilityDir -PathType Container)) {
+        Write-Host "Ollama utility directory not found. Exiting."
+        return
+    }
+    Set-Location $ollamaUtilityDir
+    python -m http.server --bind 127.0.0.1
 }
 
 # Main entry point
