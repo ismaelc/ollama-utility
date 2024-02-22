@@ -83,15 +83,14 @@ function Check-Model {
 
 # Start Python Server
 function Start-PythonServer {
-    Get-Process -Protocol tcp -Port $PortPython | Stop-Process -Force
+    Get-NetTCPConnection | Where-Object { $_.LocalPort -eq $PortPython } | Select-Object -ExpandProperty OwningProcess | ForEach-Object { Stop-Process -Id $_ -Force }
     Write-Host "Starting Python Server..."
     Start-Process python3 -ArgumentList "server.py"
 }
 
 # Start Web Server
 function Start-WebServer {
-    Get-Process -Protocol tcp -Port $PortWeb | Stop-Process -Force
-    Write-Host "Starting Web Server..."
+    Get-NetTCPConnection | Where-Object { $_.LocalPort -eq $PortWeb } | Select-Object -ExpandProperty OwningProcess | ForEach-Object { Stop-Process -Id $_ -Force }    Write-Host "Starting Web Server..."
     $ollamaUtilityDir = Join-Path $env:USERPROFILE "ollama-utility"
     if (-not (Test-Path $ollamaUtilityDir -PathType Container)) {
         Write-Host "Ollama utility directory not found. Exiting."
