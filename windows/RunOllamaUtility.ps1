@@ -1,4 +1,6 @@
 $ModelName = "mistral:7b-instruct-v0.2-q4_K_M"
+$PortWeb = 8000
+$PortPython = 8001
 
 # Default task that checks for ollama, checks for model, downloads the assets, and starts the ollama and web server
 function Default-Task {
@@ -34,7 +36,6 @@ function Check-Python {
     if (-not (Get-Command python3 -ErrorAction SilentlyContinue)) {
         return $false
     } else {
-        # Write-Host "Python is already installed."
         return $true
     }
 }
@@ -82,12 +83,14 @@ function Check-Model {
 
 # Start Python Server
 function Start-PythonServer {
+    Get-Process -Protocol tcp -Port $PortPython | Stop-Process -Force
     Write-Host "Starting Python Server..."
     Start-Process python3 -ArgumentList "server.py"
 }
 
 # Start Web Server
 function Start-WebServer {
+    Get-Process -Protocol tcp -Port $PortWeb | Stop-Process -Force
     Write-Host "Starting Web Server..."
     $ollamaUtilityDir = Join-Path $env:USERPROFILE "ollama-utility"
     if (-not (Test-Path $ollamaUtilityDir -PathType Container)) {
@@ -95,7 +98,7 @@ function Start-WebServer {
         return
     }
     Set-Location $ollamaUtilityDir
-    python -m http.server --bind 127.0.0.1
+    python -m http.server $PortWeb --bind 127.0.0.1
 }
 
 # Main entry point
