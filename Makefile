@@ -66,7 +66,7 @@ ollama_server:
 	elif [ "$$OS" = "Linux" ] && [ -z "$$PID" ]; then \
 		echo "Starting ollama server..."; \
 		export OLLAMA_ORIGINS=http://localhost:$(WEB_SERVER_PORT); \
-		ollama serve &; \
+		ollama serve & \
 	fi
 
 # Python Server
