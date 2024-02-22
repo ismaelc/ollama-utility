@@ -75,7 +75,7 @@ python_server:
 	@echo "Checking for any process using port $(PYTHON_SERVER_PORT)..."
 	@PID=$$(lsof -ti:$(PYTHON_SERVER_PORT)); if [ -n "$$PID" ]; then echo "Killing process $$PID using port $(PYTHON_SERVER_PORT)"; kill $$PID; fi
 	@echo "Starting Python server on port $(PYTHON_SERVER_PORT)..."
-	@python server.py &
+	@python3 server.py &
 
 # Task to download resources
 download_resources:
