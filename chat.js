@@ -354,14 +354,16 @@ function createUserMessageDiv(input) {
   return userMessageDiv;
 }
 
-function createResponseDiv() {
+function createResponseDiv(showSpinner = true) {
   let responseDiv = document.createElement("div");
   responseDiv.className = "response-message mb-2 text-start";
   responseDiv.style.minHeight = "3em";
-  spinner = document.createElement("div");
-  spinner.className = "spinner-border text-light";
-  spinner.setAttribute("role", "status");
-  responseDiv.appendChild(spinner);
+  if (showSpinner) {
+    spinner = document.createElement("div");
+    spinner.className = "spinner-border text-light";
+    spinner.setAttribute("role", "status");
+    responseDiv.appendChild(spinner);
+  }
   let responseTextDiv = document.createElement("div");
   responseDiv.appendChild(responseTextDiv);
   responseDiv.id = "response-" + Date.now();
@@ -850,9 +852,22 @@ function loadSelectedSession() {
   const obj = JSON.parse(localStorage.getItem(selectedChat));
 
   if (obj.selectedOption === "chat") {
-    document.getElementById("chat-history").innerHTML = decodeURIComponent(
-      obj.history
-    );
+    const messages = parseChatHistory(decodeURIComponent(obj.history));
+    const chatHistory = document.getElementById("chat-history");
+    chatHistory.innerHTML = "";
+
+    messages.forEach((message, index) => {
+      let messageDiv;
+      if (message.role === "user") {
+        messageDiv = createUserMessageDiv(message.content);
+      } else {
+        let { responseDiv, responseTextDiv } = createResponseDiv(false);
+        handleResponse({ message: { content: message.content }, done: true }, responseDiv, responseTextDiv);
+        messageDiv = responseDiv;
+      }
+      chatHistory.appendChild(messageDiv);
+    });
+
     document.getElementById("chat-container").style.display = "block";
     document.getElementById("notepad-container").style.display = "none";
     lastSelectedChat = selectedChat;

@@ -52,5 +52,5 @@ class MyRequestHandler(http.server.SimpleHTTPRequestHandler):
         self.end_headers()
 
 with socketserver.TCPServer(("", PORT), MyRequestHandler) as httpd:
-    print(f"Serving on port {PORT}")
+    print(f"Serving utility functions on port {PORT}")
     httpd.serve_forever()

@@ -7,7 +7,7 @@ A simple HTML UI for Ollama
 
 | Chat | Notepad |
 | ---- | ------- |
-| ![Chat](images/ollama-utility-01.png) | ![Notepad](images/ollama-utility-02.png) |
+| ![Chat](images/ollama-utility-chat.png) | ![Notepad](images/ollama-utility-notepad.png) |
 
 ## Setup/Usage
 
