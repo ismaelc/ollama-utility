@@ -852,20 +852,32 @@ function loadSelectedSession() {
   const obj = JSON.parse(localStorage.getItem(selectedChat));
 
   if (obj.selectedOption === "chat") {
-    const messages = parseChatHistory(decodeURIComponent(obj.history));
     const chatHistory = document.getElementById("chat-history");
-    chatHistory.innerHTML = "";
+    chatHistory.innerHTML = decodeURIComponent(obj.history); // Load the chat history from the local storage
 
-    messages.forEach((message, index) => {
-      let messageDiv;
-      if (message.role === "user") {
-        messageDiv = createUserMessageDiv(message.content);
-      } else {
-        let { responseDiv, responseTextDiv } = createResponseDiv(false);
-        handleResponse({ message: { content: message.content }, done: true }, responseDiv, responseTextDiv);
-        messageDiv = responseDiv;
+    // Iterate over each message in the chat history
+    chatHistory.childNodes.forEach((messageDiv) => {
+      // Check if the message is a user message or a response message
+      const isUserMessage = messageDiv.classList.contains("user-message");
+      const isResponseMessage = messageDiv.classList.contains("response-message");
+
+      if (isUserMessage || isResponseMessage) {
+        // Create a delete button for the message
+        const deleteButton = createDeleteButton(messageDiv.id, (message) => {
+          chatHistory.removeChild(message);
+        });
+
+        // Add event listeners to show/hide the delete button on mouseover/mouseout
+        messageDiv.addEventListener("mouseover", function () {
+          deleteButton.style.visibility = "visible";
+        });
+        messageDiv.addEventListener("mouseout", function () {
+          deleteButton.style.visibility = "hidden";
+        });
+
+        // Append the delete button to the message div
+        messageDiv.appendChild(deleteButton);
       }
-      chatHistory.appendChild(messageDiv);
     });
 
     document.getElementById("chat-container").style.display = "block";
