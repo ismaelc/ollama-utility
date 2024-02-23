@@ -1,6 +1,6 @@
 # ollama-utility
 
-Forked from [ollama-ui](https://github.com/ollama-ui/ollama-ui).
+Forked from [ollama-ui](https://github.com/ollama-ui/ollama-ui)
 
 A simple HTML UI for Ollama
 
@@ -72,7 +72,7 @@ If `RunOllamaUtility.ps1` indicates you need Python, simply type "Python" in the
 git pull origin main
 ```
 
-Or, if Git is not installed, re-download the latest version as described above.
+...or, if Git is not installed, re-download the latest version as described above.
 
 #### Get new models:
 
@@ -80,7 +80,7 @@ Go to https://ollama.com/library and click on a model. Click `Tags`
 ```
 ollama pull gemma:7b-instruct-q4_K_M
 ```
-Refresh http://localhost:8000 to update the model dropdown selection
+...refresh http://localhost:8000 to update the model dropdown selection
 
 #### Terminate running ollama service:
 
@@ -94,7 +94,7 @@ pkill -f "ollama serve"
 lsof -ti:8000 | xargs kill
 ```
 
-or in Powershell...
+...or in Powershell...
 ```bash
 Get-NetTCPConnection | Where-Object { $_.LocalPort -eq 8000 } | Select-Object -ExpandProperty OwningProcess | ForEach-Object { Stop-Process -Id $_ -Force }
 ```
