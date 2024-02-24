@@ -491,7 +491,7 @@ function saveSystemText() {
 function loadSystemText() {
   const systemText = localStorage.getItem(generateKey("system-text"));
   if (systemText) {
-    document.getElementById(generateKey("system-text")).value = systemText;
+    document.getElementById("system-text").value = systemText;
   }
 }
 

@@ -110,3 +110,26 @@ body {
 #export-button {
   margin-left: -3px; /* adjust the value as needed */
 }
+
+/* Ensure the container stretches fully */
+#model-controls .d-flex.flex-column {
+  width: 100%;
+}
+
+/* Style for the flex containers holding the label and form field */
+#model-controls .d-flex.align-items-center {
+  justify-content: flex-end; /* Adjust this to align items to the end */
+  width: 100%; /* Ensure the container uses the full width */
+}
+
+
+/* Style adjustments for labels to align text right */
+#model-controls label {
+  white-space: nowrap; /* Prevents the text from wrapping */
+  margin-right: 0.5rem; /* Add some space between the label and the form element */
+}
+
+/* This class may not be necessary if the above changes are made */
+.bi-gear-fill.gear-icon {
+  flex-grow: 0; /* Prevent the icon from taking up extra space */
+}
