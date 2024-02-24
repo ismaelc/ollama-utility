@@ -25,7 +25,7 @@ const deleteIcon = `<svg xmlns="http://www.w3.org/2000/svg" width="16" height="1
 </svg>`;
 
 const TEMPERATURE = 0.1;
-const NUM_CONTEXT = 32768;
+const NUM_CONTEXT = 8000;
 const NUM_PREDICT = 32000;
 
 // -------- GLOBALS --------
