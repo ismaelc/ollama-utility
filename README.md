@@ -62,7 +62,7 @@ Invoke-WebRequest "https://raw.githubusercontent.com/ismaelc/ollama-utility/main
 (open http://localhost:8000)
 ```
 
-If `RunOllamaUtility.ps1` indicates you need Python, simply type "Python" in the same Terminal to open up Microsoft Store where you can get/install Python from.
+If a message indicates you need Python, simply type "Python" in the same Terminal to open up Microsoft Store to download/install Python.
 
 ## Maintenance Commands
 
