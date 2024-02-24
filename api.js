@@ -1,11 +1,16 @@
 // Define the port number as a global variable
 var serverPort = 8001; // Update this to your server's port if different
 var ollamaPort = 11434; // Default Ollama service port
+const NAMESPACE = 'ollama-utility';
+
+function generateKey(key) {
+  return `${NAMESPACE}.${key}`;
+}
 
 // Construct the base URL using the global port variable
 var serverBaseUrl = `http://localhost:${serverPort}`;
 var ollamaBaseUrl =
-  localStorage.getItem("host-address") || `http://localhost:${ollamaPort}`; // Ollama base URL
+  localStorage.getItem(generateKey("host-address")) || `http://localhost:${ollamaPort}`; // Ollama base URL
 
 var rebuildRules = undefined;
 if (typeof chrome !== "undefined" && chrome.runtime && chrome.runtime.id) {
@@ -48,7 +53,7 @@ if (rebuildRules) {
 
 function setHostAddress() {
   ollamaBaseUrl = document.querySelector("#settingsModal #host-address").value;
-  localStorage.setItem("host-address", ollamaBaseUrl);
+  localStorage.setItem(generateKey("host-address"), ollamaBaseUrl);
   populateModels(); // Assuming this function refreshes model list or similar
   if (rebuildRules) {
     rebuildRules(ollamaBaseUrl);

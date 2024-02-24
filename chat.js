@@ -193,9 +193,9 @@ document.getElementById("saveSettings").addEventListener("click", function () {
   const temperature = document.getElementById("temperature").value;
   const num_ctx = document.getElementById("num-ct").value;
   const num_predict = document.getElementById("num-predict").value;
-  localStorage.setItem("temperature", temperature);
-  localStorage.setItem("num_ctx", num_ctx);
-  localStorage.setItem("num_predict", num_predict);
+  localStorage.setItem(generateKey("temperature"), temperature);
+  localStorage.setItem(generateKey("num_ctx"), num_ctx);
+  localStorage.setItem(generateKey("num_predict"), num_predict);
 
   // Get the modal instance and close it
   let settingsModal = bootstrap.Modal.getInstance(
@@ -208,9 +208,9 @@ document
   .getElementById("settingsModal")
   .addEventListener("show.bs.modal", function () {
     // Load num_ctx and num_predict from local storage
-    let temperature = localStorage.getItem("temperature");
-    let num_ctx = localStorage.getItem("num_ctx");
-    let num_predict = localStorage.getItem("num_predict");
+    let temperature = localStorage.getItem(generateKey("temperature"));
+    let num_ctx = localStorage.getItem(generateKey("num_ctx"));
+    let num_predict = localStorage.getItem(generateKey("num_predict"));
 
     // If num_ctx or num_predict is not in local storage, assign default values
     temperature = temperature || TEMPERATURE;
@@ -262,9 +262,9 @@ function getSelectedModel() {
 }
 
 function getModelOptions() {
-  let temperature = localStorage.getItem("temperature");
-  let num_ctx = localStorage.getItem("num_ctx");
-  let num_predict = localStorage.getItem("num_predict");
+  let temperature = localStorage.getItem(generateKey("temperature"));
+  let num_ctx = localStorage.getItem(generateKey("num_ctx"));
+  let num_predict = localStorage.getItem(generateKey("num_predict"));
 
   // Convert to integer if they are string
   if (typeof temperature === "string") {
@@ -484,14 +484,14 @@ function parseChatHistory(htmlString) {
 // Save system-text to localStorage
 function saveSystemText() {
   const systemText = getSystemText();
-  localStorage.setItem("system-text", systemText);
+  localStorage.setItem(generateKey("system-text"), systemText);
 }
 
 // Load system-text from localStorage
 function loadSystemText() {
-  const systemText = localStorage.getItem("system-text");
+  const systemText = localStorage.getItem(generateKey("system-text"));
   if (systemText) {
-    document.getElementById("system-text").value = systemText;
+    document.getElementById(generateKey("system-text")).value = systemText;
   }
 }
 
@@ -499,12 +499,13 @@ function loadSystemText() {
 // TODO: Include other attributes like .model
 function exportChat() {
   console.log("exporting chat");
-  const selectedChat = document.getElementById("chat-select").value;
-  const data = localStorage.getItem(selectedChat);
+  const selectedChat = document.getElementById("chat-select");
+  const option = selectedChat.querySelector(`option[value="${selectedChat.value}"]`);
+  const data = localStorage.getItem(selectedChat.value);
   const blob = new Blob([data], { type: "text/plain;charset=utf-8" });
   const url = URL.createObjectURL(blob);
   const link = document.createElement("a");
-  link.download = selectedChat + ".txt";
+  link.download = option.innerText + ".txt";
   link.href = url;
   link.click();
 }
@@ -522,7 +523,7 @@ function fileInputChange(e) {
     reader.onload = function (e) {
       const contents = e.target.result;
       const chatName = file.name.replace(".txt", "");
-      localStorage.setItem(chatName, contents);
+      localStorage.setItem(generateKey(`session.${chatName}`), contents);
       updateChatListAndSelection(chatName);
       loadSelectedSession();
     };
@@ -579,6 +580,15 @@ function checkNotebookTokenCount() {
   } else {
     generateButton.disabled = false;
   }
+}
+
+function removePrefix(prefix, str) {
+  if (str.startsWith(prefix)) {
+      return str.substring(prefix.length);
+  }
+
+  // If the string does not start with the prefix, return the original string
+  return str;
 }
 
 // -------- MAIN FUNCTIONS --------
@@ -794,8 +804,8 @@ async function generateText() {
     });
 }
 
-function deleteSession(sessionName) {
-  const selectedSession = document.getElementById(sessionName).value;
+function deleteSession(elementId) {
+  const selectedSession = document.getElementById(elementId).value;
   localStorage.removeItem(selectedSession);
   updateChatListAndSelection();
 }
@@ -812,7 +822,7 @@ function saveSession(sessionName, history, selectedOption) {
   const model = getSelectedModel();
   const systemText = getSystemText(); // Get the system text
   localStorage.setItem(
-    sessionName,
+    generateKey(`session.${sessionName}`),
     JSON.stringify({
       history: history,
       model: model,
@@ -850,7 +860,6 @@ function saveNotepad() {
 function loadSelectedSession() {
   const selectedChat = document.getElementById("chat-select").value;
   const obj = JSON.parse(localStorage.getItem(selectedChat));
-
   if (obj.selectedOption === "chat") {
     const chatHistory = document.getElementById("chat-history");
     chatHistory.innerHTML = decodeURIComponent(obj.history); // Load the chat history from the local storage
@@ -921,22 +930,37 @@ function updateChatListAndSelection(text = "") {
   chatList.innerHTML =
     '<option value="" disabled selected>Select a session</option>';
   let selectedIndex = 0;
+
   for (let i = 0; i < localStorage.length; i++) {
-    // TODO: Need to move this out of the session names' way
-    const key = localStorage.key(i);
-    if (key === "host-address") continue;
-    if (key === "system-text") continue;
-    if (key === "temperature") continue;
-    if (key === "num_ctx") continue;
-    if (key === "num_predict") continue;
-    const option = document.createElement("option");
-    option.value = key;
-    option.text = key;
-    chatList.add(option);
-    if (key === text) {
-      selectedIndex = i;
+    let key = localStorage.key(i);
+    if (key.startsWith(generateKey('session'))) {
+        // let value = localStorage.getItem(key);
+        const option = document.createElement("option");
+        option.value = key;
+        option.text = removePrefix(`${NAMESPACE}.session.`, key);
+        chatList.add(option);
+        if (removePrefix(`${NAMESPACE}.session.`, key) === text) {
+          selectedIndex = i;
+        }
     }
   }
+
+  // for (let i = 0; i < localStorage.length; i++) {
+  //   // TODO: Need to move this out of the session names' way
+  //   const key = localStorage.key(i);
+  //   if (key === generateKey("host-address")) continue;
+  //   if (key === generateKey("system-text")) continue;
+  //   if (key === generateKey("temperature")) continue;
+  //   if (key === generateKey("num_ctx")) continue;
+  //   if (key === generateKey("num_predict")) continue;
+  //   const option = document.createElement("option");
+  //   option.value = key;
+  //   option.text = key;
+  //   chatList.add(option);
+  //   if (key === text) {
+  //     selectedIndex = i;
+  //   }
+  // }
   for (var i = 0; i < chatList.options.length; i++) {
     if (chatList.options[i].text === text) {
       chatList.selectedIndex = i;
