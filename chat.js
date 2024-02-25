@@ -908,6 +908,7 @@ function loadSelectedSession() {
   document.getElementById("system-text").value = obj.systemText; // Set the system text
 
   updateModelInQueryString(obj.model);
+  updateModelSelection(obj.model);
   const session = document.getElementById("userName");
   if (session) {
     session.value = selectedChat;
@@ -945,28 +946,17 @@ function updateChatListAndSelection(text = "") {
     }
   }
 
-  // for (let i = 0; i < localStorage.length; i++) {
-  //   // TODO: Need to move this out of the session names' way
-  //   const key = localStorage.key(i);
-  //   if (key === generateKey("host-address")) continue;
-  //   if (key === generateKey("system-text")) continue;
-  //   if (key === generateKey("temperature")) continue;
-  //   if (key === generateKey("num_ctx")) continue;
-  //   if (key === generateKey("num_predict")) continue;
-  //   const option = document.createElement("option");
-  //   option.value = key;
-  //   option.text = key;
-  //   chatList.add(option);
-  //   if (key === text) {
-  //     selectedIndex = i;
-  //   }
-  // }
   for (var i = 0; i < chatList.options.length; i++) {
     if (chatList.options[i].text === text) {
       chatList.selectedIndex = i;
       break;
     }
   }
+}
+
+function updateModelSelection(model) {
+  const selectElement = document.getElementById("model-select");
+  selectElement.value = model;
 }
 
 // -------- ONLOAD --------
