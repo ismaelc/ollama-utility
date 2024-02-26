@@ -103,10 +103,6 @@ body {
   margin-bottom: 1rem;
 }
 
-#import-button {
-  margin-right: -3px; /* adjust the value as needed */
-}
-
 #export-button {
   margin-left: -3px; /* adjust the value as needed */
 }
