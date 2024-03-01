@@ -34,6 +34,12 @@
             <div class="col-md-8 col-12">
                 <h4>Ollama Utility</h4>
                 <div class="form-check">
+                    <input class="form-check-input" type="radio" name="utilityOption" id="chatOption" value="chat" checked>
+                    <label class="form-check-label" for="chatOption">
+                        Chat
+                    </label>
+                </div>
+                <div class="form-check">
                     <input class="form-check-input" type="radio" name="utilityOption" id="notepadOption"
                         value="notepad">
                     <label class="form-check-label" for="notepadOption">
@@ -41,10 +47,9 @@
                     </label>
                 </div>
                 <div class="form-check">
-                    <input class="form-check-input" type="radio" name="utilityOption" id="chatOption" value="chat"
-                        checked>
-                    <label class="form-check-label" for="chatOption">
-                        Chat
+                    <input class="form-check-input" type="radio" name="utilityOption" id="functionOption" value="function">
+                    <label class="form-check-label" for="functionOption">
+                        Function Calling
                     </label>
                 </div>
             </div>
@@ -58,7 +63,8 @@
                     <div class="d-flex align-items-center mb-2">
                         <label for="system-text" class="form-label me-2" style="font-size: smaller;">System
                             text:</label>
-                        <input class="form-control" id="system-text" type="text" style="width: auto;" size="35">
+                        <input class="form-control" id="system-text" type="text" style="width: auto;" size="31">
+                        <i class="bi bi-pencil-fill pencil-icon"></i>
                     </div>
                 </div>
             </div>
@@ -191,6 +197,25 @@
                 <div class="modal-footer">
                     <button type="button" class="btn btn-secondary" data-bs-dismiss="modal">Close</button>
                     <button type="button" class="btn btn-primary" id="saveSettings">Save changes</button>
+                </div>
+            </div>
+        </div>
+    </div>
+
+    <!-- Edit System Text Modal -->
+    <div class="modal fade" id="editSystemTextModal" tabindex="-1" aria-labelledby="editSystemTextModalLabel" aria-hidden="true">
+        <div class="modal-dialog">
+            <div class="modal-content">
+                <div class="modal-header">
+                    <h5 class="modal-title" id="editSystemTextModalLabel">Edit System Text</h5>
+                    <button type="button" class="btn-close" data-bs-dismiss="modal" aria-label="Close"></button>
+                </div>
+                <div class="modal-body">
+                    <textarea class="form-control" id="system-text-modal" rows="5"></textarea>
+                </div>
+                <div class="modal-footer">
+                    <button type="button" class="btn btn-secondary" data-bs-dismiss="modal">Close</button>
+                    <button type="button" class="btn btn-primary" id="saveSystemTextModal">Save changes</button>
                 </div>
             </div>
         </div>
