@@ -132,7 +132,6 @@ async function killOllama() {
 }
 
 
-
 /**
  * Function to start the "ollama serve" process.
  */
@@ -153,5 +152,34 @@ async function startOllama() {
     }
   } catch (error) {
     console.log("Error when trying to send start request:", error);
+  }
+}
+
+/**
+ * Function to call a tool endpoint.
+ * @param {string} tool - The tool to be called.
+ * @param {string} toolInput - The input for the tool.
+ * @returns {Promise<string>} The response text if the request is successful, otherwise throws an error.
+ */
+async function callTool(tool, toolInput) {
+  try {
+    console.log(`${serverBaseUrl}/tool/${tool}?i=${toolInput}`);
+    const response = await fetch(`${serverBaseUrl}/tool/${tool}?i=${toolInput}`, {
+      credentials: "include",
+      mode: 'cors'
+    });
+    if (response.ok) {
+      const text = await response.text();
+      console.log(text); // Process response text as needed
+      return text;
+    } else {
+      const errorText = `Failed to call the tool "${tool}" with input "${toolInput}". ${response.statusText}`;
+      console.error(errorText);
+      throw new Error(errorText);
+    }
+  } catch (error) {
+    const errorText = "Error when trying to call the tool: " + error;
+    console.error(errorText);
+    throw new Error(errorText);
   }
 }

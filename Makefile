@@ -17,13 +17,14 @@ check_ollama:
 			brew upgrade ollama; \
 		else \
 			curl -fsSL https://ollama.com/install.sh | sh; \
-		fi; \
-	else \
-		echo "Checking for ollama updates..."; \
-		if [ `uname` = "Darwin" ]; then \
-			brew upgrade ollama; \
 		fi \
 	fi
+#	else \
+#		echo "Checking for ollama updates..."; \
+#		if [ `uname` = "Darwin" ]; then \
+#			brew upgrade ollama; \
+#		fi \
+#	fi
 
 # Check if Python is installed and install it if not
 check_python:

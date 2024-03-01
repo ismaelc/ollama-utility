@@ -1,56 +1,80 @@
-import http.server
-import socketserver
+from http.server import HTTPServer, BaseHTTPRequestHandler
+from urllib.parse import urlparse, parse_qs
 import subprocess
+import importlib
 
-PORT = 8001
+class MyRequestHandler(BaseHTTPRequestHandler):
 
-class MyRequestHandler(http.server.SimpleHTTPRequestHandler):
-    def end_headers(self):
-        self._send_cors_headers()
-        super().end_headers()
-
-    def _send_cors_headers(self):
-        """Sends CORS headers to the client."""
-        self.send_header("Access-Control-Allow-Origin", "*")
-        self.send_header("Access-Control-Allow-Methods", "GET, POST, OPTIONS")
-        self.send_header("Access-Control-Allow-Headers", "X-Requested-With, Content-type")
+    def do_OPTIONS(self):           
+        self.send_response(200, "ok")       
+        self.send_header('Access-Control-Allow-Origin', 'http://localhost:8000')                
+        self.send_header('Access-Control-Allow-Methods', 'GET, OPTIONS')
+        self.send_header("Access-Control-Allow-Headers", "X-Requested-With")
+        self.send_header("Access-Control-Allow-Headers", "Content-Type")
+        self.send_header('Access-Control-Allow-Credentials', 'true')
+        self.end_headers()
 
     def do_GET(self):
-        self._send_cors_headers()  # Send CORS headers for GET requests
-        if self.path == "/kill_ollama":
+        parsed_path = urlparse(self.path)
+        if parsed_path.path.startswith('/tool/'):
             try:
-                # Use grep to find "ollama serve" processes, awk to extract PIDs, and xargs to kill them
+                tool_name = parsed_path.path.split('/')[-1]
+                tool_input = parse_qs(parsed_path.query).get('i', [''])[0]
+
+                tool_module = importlib.import_module(f'tools.{tool_name}')
+                tool_function = getattr(tool_module, tool_name)
+                result = tool_function(tool_input)
+
+                self.send_response(200)
+                self.send_header('Access-Control-Allow-Origin', 'http://localhost:8000')
+                self.send_header('Access-Control-Allow-Credentials', 'true')
+                self.send_header('Content-Type', 'text/plain')
+                self.end_headers()
+                self.wfile.write(str(result).encode())
+            except Exception as e:
+                self.send_response(500)
+                self.send_header('Access-Control-Allow-Origin', 'http://localhost:8000')
+                self.send_header('Access-Control-Allow-Credentials', 'true')
+                self.send_header('Content-Type', 'text/plain')
+                self.end_headers()
+                self.wfile.write(f"Error: {str(e)}".encode())
+        elif parsed_path.path == '/kill_ollama':
+            try:
                 command = "ps aux | grep 'ollama serve' | grep -v grep | awk '{print $2}' | xargs -r kill -9"
                 subprocess.Popen(command, shell=True, stdout=subprocess.PIPE, stderr=subprocess.PIPE)
                 self.send_response(200)
-                self.send_header("Content-type", "text/plain")
+                self.send_header('Access-Control-Allow-Origin', 'http://localhost:8000')
+                self.send_header('Access-Control-Allow-Credentials', 'true')
+                self.send_header('Content-Type', 'text/plain')
                 self.end_headers()
                 self.wfile.write(b"Process 'ollama serve' terminated successfully.")
             except Exception as e:
                 self.send_response(500)
-                self.send_header("Content-type", "text/plain")
+                self.send_header('Access-Control-Allow-Origin', 'http://localhost:8000')
+                self.send_header('Access-Control-Allow-Credentials', 'true')
+                self.send_header('Content-Type', 'text/plain')
                 self.end_headers()
                 self.wfile.write(f"Error: {str(e)}".encode())
-        elif self.path == "/start_ollama":
+        elif parsed_path.path == '/start_ollama':
             try:
                 subprocess.Popen(["ollama", "serve"])
                 self.send_response(200)
-                self.send_header("Content-type", "text/plain")
+                self.send_header('Access-Control-Allow-Origin', 'http://localhost:8000')
+                self.send_header('Access-Control-Allow-Credentials', 'true')
+                self.send_header('Content-Type', 'text/plain')
                 self.end_headers()
                 self.wfile.write(b"Process 'ollama serve' started successfully.")
             except Exception as e:
                 self.send_response(500)
-                self.send_header("Content-type", "text/plain")
+                self.send_header('Access-Control-Allow-Origin', 'http://localhost:8000')
+                self.send_header('Access-Control-Allow-Credentials', 'true')
+                self.send_header('Content-Type', 'text/plain')
                 self.end_headers()
                 self.wfile.write(f"Error: {str(e)}".encode())
         else:
-            super().do_GET()
+            self.send_response(404)
+            self.end_headers()
 
-    def do_OPTIONS(self):
-        self.send_response(200)  # OK status
-        self._send_cors_headers()
-        self.end_headers()
-
-with socketserver.TCPServer(("", PORT), MyRequestHandler) as httpd:
-    print(f"Serving utility functions on port {PORT}")
-    httpd.serve_forever()
+httpd = HTTPServer(('localhost', 8001), MyRequestHandler)
+print(f"Serving utility functions on port 8001")
+httpd.serve_forever()

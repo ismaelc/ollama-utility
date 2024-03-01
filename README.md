@@ -5,9 +5,9 @@ Forked from [ollama-ui](https://github.com/ollama-ui/ollama-ui)
 A simple HTML UI for Ollama
 
 
-| Chat | Notepad |
-| ---- | ------- |
-| ![Chat](images/ollama-utility-chat.png) | ![Notepad](images/ollama-utility-notepad.png) |
+| Chat | Notepad | Function Calling |
+| ---- | ------- | ---------------- |
+| ![Chat](images/ollama-utility-chat.png) | ![Notepad](images/ollama-utility-notepad.png) | ![Function](images/ollama-utility-function.png) |
 
 ## Setup/Usage
 
@@ -98,3 +98,15 @@ lsof -ti:8000 | xargs kill
 ```bash
 Get-NetTCPConnection | Where-Object { $_.LocalPort -eq 8000 } | Select-Object -ExpandProperty OwningProcess | ForEach-Object { Stop-Process -Id $_ -Force }
 ```
+
+## Function Calling
+
+Function calling allows LLMs to pick function identifiers to call.
+The implementation of function calling in this project is rudimentary, and is aimed
+more for determining FC capabilities of different models.
+
+To try this out, "Import" some examples from the `sample_sessions` folder.
+
+You can create your own Tools by putting them in the `tools` folder,
+and referencing them in the system prompt. Look at the example sessions prefixed with
+`Function` as an example template for these system prompts.

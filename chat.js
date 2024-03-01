@@ -56,6 +56,8 @@ let lastSelectedNotebook = "";
 
 // -------- EVENT LISTENERS --------
 
+document.getElementById("send-button").addEventListener("click", submitRequest);
+
 document.getElementById("user-input").addEventListener("keydown", function (e) {
   if (e.key === "Enter") {
     e.preventDefault(); // Prevents the default action to be triggered
@@ -77,7 +79,9 @@ document.getElementById("user-input").addEventListener("keydown", function (e) {
 document.getElementById("delete-chat").addEventListener("click", function () {
   const selectedSession = document.getElementById("chat-select").value;
   if (selectedSession) {
-    if (confirm("Are you sure you want to delete this chat with a saved session?")) {
+    if (
+      confirm("Are you sure you want to delete this chat with a saved session?")
+    ) {
       deleteSession("chat-select");
       document.getElementById("chat-history").innerHTML = "";
     }
@@ -85,27 +89,33 @@ document.getElementById("delete-chat").addEventListener("click", function () {
     deleteSession("chat-select");
     document.getElementById("chat-history").innerHTML = "";
   }
-}); 
-document.getElementById("delete-notepad").addEventListener("click", function () {
-  const selectedSession = document.getElementById("chat-select").value;
-  if (selectedSession) {
-    if (confirm("Are you sure you want to delete this notepad with a saved session?")) {
+});
+document
+  .getElementById("delete-notepad")
+  .addEventListener("click", function () {
+    const selectedSession = document.getElementById("chat-select").value;
+    if (selectedSession) {
+      if (
+        confirm(
+          "Are you sure you want to delete this notepad with a saved session?"
+        )
+      ) {
+        deleteSession("chat-select");
+        document.getElementById("notepad1").value = "";
+        document.getElementById("notepad2").value = "";
+      }
+    } else {
       deleteSession("chat-select");
       document.getElementById("notepad1").value = "";
       document.getElementById("notepad2").value = "";
     }
-  } else {
-    deleteSession("chat-select");
-    document.getElementById("notepad1").value = "";
-    document.getElementById("notepad2").value = "";
-  }
-});
+  });
 document.getElementById("saveName").addEventListener("click", function () {
   const selectedOption = document.querySelector(
     'input[name="utilityOption"]:checked'
   ).value;
-  if (selectedOption === "chat") {
-    saveChat();
+  if (selectedOption === "chat" || selectedOption === "function") {
+    saveChat(selectedOption);
   } else if (selectedOption === "notepad") {
     saveNotepad();
   }
@@ -175,7 +185,7 @@ for (var i = 0; i < radios.length; i++) {
     // Create a new AbortController for the next text generation
     interrupt = new AbortController();
     document.getElementById("chat-container").style.display =
-      this.value === "chat" ? "block" : "none";
+      this.value === "chat" || this.value === "function" ? "block" : "none";
     document.getElementById("notepad-container").style.display =
       this.value === "notepad" ? "block" : "none";
     const selection =
@@ -186,6 +196,20 @@ for (var i = 0; i < radios.length; i++) {
 
 document.querySelector(".gear-icon").addEventListener("click", function () {
   let modal = new bootstrap.Modal(document.getElementById("settingsModal"));
+  modal.show();
+});
+
+document.querySelector(".pencil-icon").addEventListener("click", function () {
+  // Get the system text
+  const systemText = getSystemText().replace(/\\n/g, '\n');
+
+  // Set the value of the textarea in the modal
+  document.getElementById("system-text-modal").value = systemText;
+
+  // Show the modal
+  let modal = new bootstrap.Modal(
+    document.getElementById("editSystemTextModal")
+  );
   modal.show();
 });
 
@@ -227,6 +251,25 @@ document
     if (num_predict) {
       document.getElementById("num-predict").value = num_predict;
     }
+  });
+
+document
+  .getElementById("saveSystemTextModal")
+  .addEventListener("click", function () {
+    // Get the value of the textarea in the modal
+    const systemTextModal = document.getElementById("system-text-modal").value;
+
+    // Set the value of the system text field
+    document.getElementById("system-text").value = systemTextModal.replace(/\n/g, "\\n");
+
+    // Close the modal
+    let modal = bootstrap.Modal.getInstance(
+      document.getElementById("editSystemTextModal")
+    );
+    modal.hide();
+
+    // Save the system text
+    saveSystemText();
   });
 
 // -------- HELPER FUNCTIONS --------
@@ -299,11 +342,6 @@ function getModelOptions() {
   };
 }
 
-// Function to get the system text
-function getSystemText() {
-  return document.getElementById("system-text").value;
-}
-
 function displayChatContainer() {
   document.getElementById("chat-container").style.display = "block";
 }
@@ -319,14 +357,18 @@ function isValidInput(input) {
 function prepareData(input, parsedHistory) {
   const selectedModel = getSelectedModel();
   const modelOptions = getModelOptions();
+
   const system = {
     role: "system",
-    content: getSystemText(),
+    content: decodeURIComponent(getSystemText()).replace(/\\n/g, '\n'),
   };
-  let prompt = parsedHistory.push({
-    role: "user",
-    content: input,
-  });
+  let prompt = [];
+  if (isValidInput(input)) {
+    prompt = parsedHistory.push({
+      role: "user",
+      content: input,
+    });
+  }
   prompt = [system].concat(parsedHistory);
   return {
     model: selectedModel,
@@ -381,6 +423,22 @@ function createResponseDiv(showSpinner = true) {
     responseDeleteButton.style.visibility = "hidden";
   });
   responseDiv.appendChild(responseDeleteButton);
+  return { responseDiv, responseTextDiv };
+}
+
+function createResponseWithText(text) {
+  let { responseDiv, responseTextDiv } = createResponseDiv(false);
+
+  if (text != undefined) {
+    if (responseDiv.hidden_text == undefined) {
+      responseDiv.hidden_text = "";
+    }
+    responseDiv.hidden_text = text;
+    responseTextDiv.innerHTML = DOMPurify.sanitize(
+      marked.parse(responseDiv.hidden_text)
+    );
+  }
+
   return { responseDiv, responseTextDiv };
 }
 
@@ -449,31 +507,24 @@ function parseChatHistory(htmlString) {
   // Initialize an empty array to hold the output
   var output = [];
 
-  // Get all the user messages
-  var userMessages = doc.querySelectorAll('div[id^="message-"]');
-  // Get all the assistant responses
-  var assistantResponses = doc.querySelectorAll('div[id^="response-"]');
+  // Get all the messages
+  var messages = doc.querySelectorAll(
+    'div[id^="message-"], div[id^="response-"]:not([data-function-call])'
+  );
 
-  // Loop through all the user messages
-  for (var i = 0; i < userMessages.length; i++) {
+  // Loop through all the messages
+  for (var i = 0; i < messages.length; i++) {
     try {
-      // Add the user message to the output array
+      // Determine the role based on the id of the message
+      var role = messages[i].id.startsWith("message-") ? "user" : "assistant";
+      // Add the message to the output array
       output.push({
-        role: "user",
-        content: userMessages[i].firstChild.textContent.trim(),
+        role: role,
+        // content: messages[i].firstChild.textContent.trim(),
+        content: messages[i].innerText.trim(),
       });
     } catch (error) {
-      console.info("Error while processing user message: ", error);
-    }
-
-    try {
-      // Add the assistant response to the output array
-      output.push({
-        role: "assistant",
-        content: assistantResponses[i].firstChild.textContent.trim(),
-      });
-    } catch (error) {
-      console.info("Error while processing assistant response: ", error);
+      console.info("Error while processing message: ", error);
     }
   }
 
@@ -481,17 +532,24 @@ function parseChatHistory(htmlString) {
   return output;
 }
 
+// Function to get the system text
+function getSystemText() {
+  return decodeURIComponent(document.getElementById('system-text').value);
+}
+
 // Save system-text to localStorage
 function saveSystemText() {
   const systemText = getSystemText();
+  // Replace newline characters with <br> tags
+  // const formattedSystemText = systemText.replace(/\n/g, "<br>");
   localStorage.setItem(generateKey("system-text"), systemText);
 }
 
 // Load system-text from localStorage
 function loadSystemText() {
-  const systemText = localStorage.getItem(generateKey("system-text"));
+  let systemText = localStorage.getItem(generateKey("system-text"));
   if (systemText) {
-    document.getElementById("system-text").value = systemText;
+    document.getElementById("system-text").value = decodeURIComponent(systemText).replace(/\n/g, "\\n");
   }
 }
 
@@ -500,7 +558,9 @@ function loadSystemText() {
 function exportChat() {
   console.log("exporting chat");
   const selectedChat = document.getElementById("chat-select");
-  const option = selectedChat.querySelector(`option[value="${selectedChat.value}"]`);
+  const option = selectedChat.querySelector(
+    `option[value="${selectedChat.value}"]`
+  );
   const data = localStorage.getItem(selectedChat.value);
   const blob = new Blob([data], { type: "text/plain;charset=utf-8" });
   const url = URL.createObjectURL(blob);
@@ -546,6 +606,10 @@ function updateTokenCounter(element, counterId) {
     textToCount = elementAreaToCount.innerText;
   }
 
+  // Add the system text to the text to count
+  const systemText = decodeURIComponent(getSystemText()).replace(/\\n/g, '\n');
+  textToCount += systemText;
+
   const tokens = getTokens(textToCount);
   document.getElementById(counterId).innerText = `Tokens: ${tokens.length}`;
 
@@ -553,19 +617,20 @@ function updateTokenCounter(element, counterId) {
   checkTokenCount();
 }
 
+// TODO: Remove?
 function checkTokenCount() {
   const tokenCounter = document.getElementById("token-counter").innerText;
   const tokenCount = parseInt(tokenCounter.split(":")[1].trim());
   const deleteChatButton = document.getElementById("delete-chat");
   const saveChatButton = document.getElementById("save-chat");
 
-  if (tokenCount === 0) {
-    deleteChatButton.disabled = true;
-    saveChatButton.disabled = true;
-  } else {
-    deleteChatButton.disabled = false;
-    saveChatButton.disabled = false;
-  }
+  // if (tokenCount === 0) {
+  //   deleteChatButton.disabled = true;
+  //   saveChatButton.disabled = true;
+  // } else {
+  //   deleteChatButton.disabled = false;
+  //   saveChatButton.disabled = false;
+  // }
 }
 
 function checkNotebookTokenCount() {
@@ -584,11 +649,49 @@ function checkNotebookTokenCount() {
 
 function removePrefix(prefix, str) {
   if (str.startsWith(prefix)) {
-      return str.substring(prefix.length);
+    return str.substring(prefix.length);
   }
 
   // If the string does not start with the prefix, return the original string
   return str;
+}
+
+function parseTextToDict(text) {
+  text = text.trim();
+  let lines = text.split("\n");
+  let result = [];
+  let current = {};
+  let prefixes = ["Thought", "Tool", "ToolInput", "Observation", "Answer"];
+
+  lines.forEach((line) => {
+    let splitLine = line.split(": ");
+    let key = splitLine[0];
+    let value = splitLine[1];
+
+    if (prefixes.includes(key)) {
+      if (key === "Thought" && Object.keys(current).length !== 0) {
+        result.push(current);
+        current = {};
+      }
+
+      current[key] = value || null;
+    }
+  });
+
+  if (Object.keys(current).length !== 0) {
+    result.push(current);
+  }
+
+  return result;
+}
+
+function hasEncodedCharacters(str) {
+  try {
+      return decodeURIComponent(str) !== str;
+  } catch (e) {
+      // If decodeURIComponent throws an error, it means str was not a valid encoded URI
+      return false;
+  }
 }
 
 // -------- MAIN FUNCTIONS --------
@@ -606,10 +709,6 @@ autoResizePadding.observe(document.getElementById("chat-input-area"));
 
 // Fetch available models and populate the dropdown
 async function populateModels() {
-  document
-    .getElementById("send-button")
-    .addEventListener("click", submitRequest);
-
   try {
     const data = await getModels();
 
@@ -656,34 +755,158 @@ async function populateModels() {
 async function submitRequest() {
   displayChatContainer();
   const input = getUserInput();
-  if (!isValidInput(input)) {
-    return;
-  }
   let chatHistory = document.getElementById("chat-history");
   let parsedHistory = parseChatHistory(chatHistory.innerHTML);
-  const data = prepareData(input, parsedHistory);
+  let data = prepareData(input, parsedHistory);
 
-  let userMessageDiv = createUserMessageDiv(input);
-  chatHistory.appendChild(userMessageDiv);
+  if (isValidInput(input)) {
+    let userMessageDiv = createUserMessageDiv(input);
+    chatHistory.appendChild(userMessageDiv);
+  }
 
   let { responseDiv, responseTextDiv } = createResponseDiv();
+
+  // Check if the Function Calling radio button is selected
+  if (
+    document.querySelector('input[name="utilityOption"]:checked').value ===
+    "function"
+  ) {
+    // Change the message bubble color to purple
+    responseDiv.style.backgroundColor = "purple";
+    responseDiv.setAttribute("data-function-call", "true");
+  }
+
   chatHistory.appendChild(responseDiv);
 
   let stopButton = createStopButton();
-  const sendButton = document.getElementById("send-button");
+  let sendButton = document.getElementById("send-button");
   sendButton.insertAdjacentElement("beforebegin", stopButton);
   autoScroller.observe(responseDiv);
 
   // Start the timer
   let time = 0;
-  const timerLabel = document.getElementById("timer-label-chat");
-  const timer = setInterval(() => {
+  let timerLabel = document.getElementById("timer-label-chat");
+  let timer = setInterval(() => {
     time++;
     timerLabel.innerText = `Time: ${time}s`;
   }, 1000);
 
-  handlePostRequest(data, stopButton, responseDiv, responseTextDiv, timer);
-  clearUserInput();
+  if (
+    document.querySelector('input[name="utilityOption"]:checked').value ===
+    "function"
+  ) {
+    // Call handlePostRequest repeatedly until the conditions are met
+    let maxIterations = 5;
+    let ctr = 0;
+    while (true) {
+      ctr += 1;
+      if (ctr > maxIterations) {
+        console.log("Exceeded max iterations");
+        break;
+      }
+      await handlePostRequest(
+        data,
+        stopButton,
+        responseDiv,
+        responseTextDiv,
+        timer
+      );
+      // TODO: There might still be the issue of nested uls
+      let responseText = responseTextDiv.innerText;
+      const parsedDict = parseTextToDict(responseText);
+      if (parsedDict.length > 0) {
+        // Get only the first dict in case ReAct tries to generate
+        // multiple tool actions
+        let firstDict = parsedDict[0];
+        let updatedDict = firstDict;
+        if (
+          "Tool" in firstDict &&
+          firstDict["Tool"] !== null &&
+          firstDict["Tool"] !== "undefined"
+        ) {
+          let observation = null;
+          try {
+            observation = await callTool(
+              firstDict["Tool"],
+              firstDict["ToolInput"]
+            );
+          } catch (error) {
+            observation = `${error.message}.`;
+          }
+          updatedDict["Observation"] = observation;
+        }
+        let assistantResponse = "";
+        // No Tool, but Answer available, meaning we need to answer the user now
+        if (!("Tool" in updatedDict) && "Answer" in updatedDict) {
+          assistantResponse = updatedDict["Answer"];
+        } else {
+          // There's Tool, meaning we need to call the tool
+          delete updatedDict.Answer;
+          assistantResponse =
+            `Thought: ${updatedDict["Thought"]}\n` +
+            `Tool: ${updatedDict["Tool"]}\n` +
+            `ToolInput: ${updatedDict["ToolInput"]}\n` +
+            `Observation: ${updatedDict["Observation"]}\n` + 
+            `Answer: Based on above...`;
+        }
+
+        // Create updated assistant responseDiv
+        let result = createResponseWithText(assistantResponse);
+        responseDiv = result.responseDiv;
+        responseTextDiv = result.responseTextDiv;
+        document.getElementById("chat-history").appendChild(responseDiv);
+
+        // After answering the user above, break the loop
+        if (!("Tool" in updatedDict) && "Answer" in updatedDict) {
+          break;
+        }
+
+        // ...else, continue function calling by creating function bot empty responseDiv
+        result = createResponseDiv();
+        responseDiv = result.responseDiv;
+        responseTextDiv = result.responseTextDiv;
+        // Check if the Function Calling radio button is selected
+        if (
+          document.querySelector('input[name="utilityOption"]:checked')
+            .value === "function"
+        ) {
+          // Change the message bubble color to purple
+          responseDiv.style.backgroundColor = "purple";
+          responseDiv.setAttribute("data-function-call", "true");
+        }
+
+        document.getElementById("chat-history").appendChild(responseDiv);
+
+        stopButton = createStopButton();
+        sendButton = document.getElementById("send-button");
+        sendButton.insertAdjacentElement("beforebegin", stopButton);
+        autoScroller.observe(responseDiv);
+
+        // Start the timer
+        time = 0;
+        timerLabel = document.getElementById("timer-label-chat");
+        timer = setInterval(() => {
+          time++;
+          timerLabel.innerText = `Time: ${time}s`;
+        }, 1000);
+      } else {
+        console.log("No more functions to call");
+        // Create updated assistant responseDiv
+        let result = createResponseWithText(responseText);
+        responseDiv = result.responseDiv;
+        responseTextDiv = result.responseTextDiv;
+        document.getElementById("chat-history").appendChild(responseDiv);
+        break;
+      }
+
+      // Gather new `data` for the next loop
+      chatHistory = document.getElementById("chat-history");
+      parsedHistory = parseChatHistory(chatHistory.innerHTML);
+      data = prepareData(input, parsedHistory);
+    }
+  } else {
+    handlePostRequest(data, stopButton, responseDiv, responseTextDiv, timer);
+  }
 }
 
 function handlePostRequest(
@@ -693,20 +916,25 @@ function handlePostRequest(
   responseTextDiv,
   timer
 ) {
-  postRequest(data, interrupt.signal, "chat")
-    .then(async (response) => {
-      await getResponse(response, (parsedResponse) => {
-        handleResponse(parsedResponse, responseDiv, responseTextDiv);
+  return new Promise((resolve, reject) => {
+    clearUserInput();
+    postRequest(data, interrupt.signal, "chat")
+      .then(async (response) => {
+        await getResponse(response, (parsedResponse) => {
+          handleResponse(parsedResponse, responseDiv, responseTextDiv);
+        });
+      })
+      .catch((error) => {
+        console.error(error);
+        reject(error);
+      })
+      .finally(() => {
+        stopButton.remove();
+        spinner.remove();
+        clearInterval(timer);
+        resolve();
       });
-    })
-    .catch((error) => {
-      console.error(error);
-    })
-    .finally(() => {
-      stopButton.remove();
-      spinner.remove();
-      clearInterval(timer);
-    });
+  });
 }
 
 function handleResponse(parsedResponse, responseDiv, responseTextDiv) {
@@ -834,11 +1062,11 @@ function saveSession(sessionName, history, selectedOption) {
 }
 
 // Function to save chat with a unique name
-function saveChat() {
+function saveChat(mode = "chat") {
   const session = document.getElementById("userName").value;
   if (session === null || session.trim() === "") return;
   const history = document.getElementById("chat-history").innerHTML;
-  saveSession(session, encodeURIComponent(history), "chat");
+  saveSession(session, encodeURIComponent(history), mode);
   lastSelectedChat = session;
 }
 
@@ -860,7 +1088,7 @@ function saveNotepad() {
 function loadSelectedSession() {
   const selectedChat = document.getElementById("chat-select").value;
   const obj = JSON.parse(localStorage.getItem(selectedChat));
-  if (obj.selectedOption === "chat") {
+  if (obj.selectedOption === "chat" || obj.selectedOption === "function") {
     const chatHistory = document.getElementById("chat-history");
     chatHistory.innerHTML = decodeURIComponent(obj.history); // Load the chat history from the local storage
 
@@ -868,24 +1096,29 @@ function loadSelectedSession() {
     chatHistory.childNodes.forEach((messageDiv) => {
       // Check if the message is a user message or a response message
       const isUserMessage = messageDiv.classList.contains("user-message");
-      const isResponseMessage = messageDiv.classList.contains("response-message");
+      const isResponseMessage =
+        messageDiv.classList.contains("response-message");
 
       if (isUserMessage || isResponseMessage) {
         // Create a delete button for the message
-        const deleteButton = createDeleteButton(messageDiv.id, (message) => {
-          chatHistory.removeChild(message);
-        });
+        if (messageDiv.querySelector(".delete-button")) {
+          // remove existing delete button
+          messageDiv.removeChild(messageDiv.querySelector(".delete-button"));
+          const deleteButton = createDeleteButton(messageDiv.id, (message) => {
+            chatHistory.removeChild(message);
+          });
 
-        // Add event listeners to show/hide the delete button on mouseover/mouseout
-        messageDiv.addEventListener("mouseover", function () {
-          deleteButton.style.visibility = "visible";
-        });
-        messageDiv.addEventListener("mouseout", function () {
-          deleteButton.style.visibility = "hidden";
-        });
+          // Add event listeners to show/hide the delete button on mouseover/mouseout
+          messageDiv.addEventListener("mouseover", function () {
+            deleteButton.style.visibility = "visible";
+          });
+          messageDiv.addEventListener("mouseout", function () {
+            deleteButton.style.visibility = "hidden";
+          });
 
-        // Append the delete button to the message div
-        messageDiv.appendChild(deleteButton);
+          // Append the delete button to the message div
+          messageDiv.appendChild(deleteButton);
+        }
       }
     });
 
@@ -905,13 +1138,17 @@ function loadSelectedSession() {
     lastSelectedNotebook = selectedChat;
   }
 
-  document.getElementById("system-text").value = obj.systemText; // Set the system text
+  let systemText = decodeURIComponent(obj.systemText).replace(/\n/g, "\\n");
+  document.getElementById("system-text").value = systemText; // Set the system text
 
   updateModelInQueryString(obj.model);
   updateModelSelection(obj.model);
-  const session = document.getElementById("userName");
-  if (session) {
-    session.value = selectedChat;
+  const sessionInputElement = document.getElementById("userName");
+  if (sessionInputElement) {
+    sessionInputElement.value = removePrefix(
+      `${NAMESPACE}.session.`,
+      selectedChat
+    );
   }
 
   try {
@@ -934,15 +1171,15 @@ function updateChatListAndSelection(text = "") {
 
   for (let i = 0; i < localStorage.length; i++) {
     let key = localStorage.key(i);
-    if (key.startsWith(generateKey('session'))) {
-        // let value = localStorage.getItem(key);
-        const option = document.createElement("option");
-        option.value = key;
-        option.text = removePrefix(`${NAMESPACE}.session.`, key);
-        chatList.add(option);
-        if (removePrefix(`${NAMESPACE}.session.`, key) === text) {
-          selectedIndex = i;
-        }
+    if (key.startsWith(generateKey("session"))) {
+      // let value = localStorage.getItem(key);
+      const option = document.createElement("option");
+      option.value = key;
+      option.text = removePrefix(`${NAMESPACE}.session.`, key);
+      chatList.add(option);
+      if (removePrefix(`${NAMESPACE}.session.`, key) === text) {
+        selectedIndex = i;
+      }
     }
   }
 
@@ -970,7 +1207,8 @@ window.onload = () => {
 
   // Ensure the UI reflects the current Ollama base URL
   if (document.querySelector("#settingsModal #host-address")) {
-    document.querySelector("#settingsModal #host-address").value = ollamaBaseUrl;
+    document.querySelector("#settingsModal #host-address").value =
+      ollamaBaseUrl;
   }
 
   document
@@ -981,7 +1219,7 @@ window.onload = () => {
   const selectedOption = document.querySelector(
     'input[name="utilityOption"]:checked'
   ).value;
-  if (selectedOption === "chat") {
+  if (selectedOption === "chat" || selectedOption === "function") {
     // Display chat input area
     document.getElementById("chat-container").style.display = "block";
   }

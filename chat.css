@@ -25,6 +25,7 @@ body {
   position: relative;
   margin-right: auto;
   max-width: 90%;
+  white-space: pre-wrap;
 }
 
 .response-message p {
@@ -79,6 +80,11 @@ body {
   margin-right: 8px;
 }
 
+.pencil-icon {
+  margin-left: 8px;
+  margin-right: 8px;
+}
+
 .form-check {
   margin-bottom: 10px; /* adjust spacing as needed */
 }
@@ -99,7 +105,7 @@ body {
 }
 
 #session-controls {
-  margin-top: -1rem;
+  /* margin-top: -1rem; */
   margin-bottom: 1rem;
 }
 
@@ -128,4 +134,12 @@ body {
 /* This class may not be necessary if the above changes are made */
 .bi-gear-fill.gear-icon {
   flex-grow: 0; /* Prevent the icon from taking up extra space */
+}
+
+#system-text {
+  white-space: pre-wrap;
+}
+
+#system-text-modal {
+  white-space: pre-wrap;
 }
