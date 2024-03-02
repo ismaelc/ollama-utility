@@ -93,7 +93,7 @@ function Start-PythonServer {
 function Start-WebServer {
     Get-NetTCPConnection | Where-Object { $_.LocalPort -eq $PortWeb } | Select-Object -ExpandProperty OwningProcess | ForEach-Object { Stop-Process -Id $_ -Force }
     Write-Host "Starting Web Server..."
-    $ollamaUtilityDir = Join-Path $env:USERPROFILE "ollama-utility"
+    $ollamaUtilityDir = "ollama-utility"
     if (-not (Test-Path $ollamaUtilityDir -PathType Container)) {
         Write-Host "Ollama utility directory not found. Exiting."
         return
