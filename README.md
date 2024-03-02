@@ -101,12 +101,8 @@ Get-NetTCPConnection | Where-Object { $_.LocalPort -eq 8000 } | Select-Object -E
 
 ## Function Calling
 
-Function calling allows LLMs to pick function identifiers to call.
-The implementation of function calling in this project is rudimentary, and is aimed
-more for determining FC capabilities of different models.
+Function calling enables Language Model (LLM) users to invoke function identifiers. In this project, the function calling mechanism is basic and primarily intended for assessing a model's function capability.
 
-To try this out, "Import" some examples from the `sample_sessions` folder.
+To experiment with this feature, import some examples from the `sample_sessions` folder.
 
-You can create your own Tools by putting them in the `tools` folder,
-and referencing them in the system prompt. Look at the example sessions prefixed with
-`Function` as an example template for these system prompts.
+You can develop your custom Tools by placing them in the `tools` folder and referencing them in the system prompt. The example sessions labeled "Function" serve as templates for these system prompts.
