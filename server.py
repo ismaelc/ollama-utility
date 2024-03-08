@@ -2,12 +2,17 @@ from http.server import HTTPServer, BaseHTTPRequestHandler
 from urllib.parse import urlparse, parse_qs
 import subprocess
 import importlib
+import cgi
+import os
+import tempfile
+
 
 class MyRequestHandler(BaseHTTPRequestHandler):
 
-    def do_OPTIONS(self):           
-        self.send_response(200, "ok")       
-        self.send_header('Access-Control-Allow-Origin', 'http://localhost:8000')                
+    def do_OPTIONS(self):
+        self.send_response(200, "ok")
+        self.send_header('Access-Control-Allow-Origin',
+                         'http://localhost:8000')
         self.send_header('Access-Control-Allow-Methods', 'GET, OPTIONS')
         self.send_header("Access-Control-Allow-Headers", "X-Requested-With")
         self.send_header("Access-Control-Allow-Headers", "Content-Type")
@@ -26,14 +31,16 @@ class MyRequestHandler(BaseHTTPRequestHandler):
                 result = tool_function(tool_input)
 
                 self.send_response(200)
-                self.send_header('Access-Control-Allow-Origin', 'http://localhost:8000')
+                self.send_header('Access-Control-Allow-Origin',
+                                 'http://localhost:8000')
                 self.send_header('Access-Control-Allow-Credentials', 'true')
                 self.send_header('Content-Type', 'text/plain')
                 self.end_headers()
                 self.wfile.write(str(result).encode())
             except Exception as e:
                 self.send_response(500)
-                self.send_header('Access-Control-Allow-Origin', 'http://localhost:8000')
+                self.send_header('Access-Control-Allow-Origin',
+                                 'http://localhost:8000')
                 self.send_header('Access-Control-Allow-Credentials', 'true')
                 self.send_header('Content-Type', 'text/plain')
                 self.end_headers()
@@ -41,16 +48,20 @@ class MyRequestHandler(BaseHTTPRequestHandler):
         elif parsed_path.path == '/kill_ollama':
             try:
                 command = "ps aux | grep 'ollama serve' | grep -v grep | awk '{print $2}' | xargs -r kill -9"
-                subprocess.Popen(command, shell=True, stdout=subprocess.PIPE, stderr=subprocess.PIPE)
+                subprocess.Popen(command, shell=True,
+                                 stdout=subprocess.PIPE, stderr=subprocess.PIPE)
                 self.send_response(200)
-                self.send_header('Access-Control-Allow-Origin', 'http://localhost:8000')
+                self.send_header('Access-Control-Allow-Origin',
+                                 'http://localhost:8000')
                 self.send_header('Access-Control-Allow-Credentials', 'true')
                 self.send_header('Content-Type', 'text/plain')
                 self.end_headers()
-                self.wfile.write(b"Process 'ollama serve' terminated successfully.")
+                self.wfile.write(
+                    b"Process 'ollama serve' terminated successfully.")
             except Exception as e:
                 self.send_response(500)
-                self.send_header('Access-Control-Allow-Origin', 'http://localhost:8000')
+                self.send_header('Access-Control-Allow-Origin',
+                                 'http://localhost:8000')
                 self.send_header('Access-Control-Allow-Credentials', 'true')
                 self.send_header('Content-Type', 'text/plain')
                 self.end_headers()
@@ -59,14 +70,17 @@ class MyRequestHandler(BaseHTTPRequestHandler):
             try:
                 subprocess.Popen(["ollama", "serve"])
                 self.send_response(200)
-                self.send_header('Access-Control-Allow-Origin', 'http://localhost:8000')
+                self.send_header('Access-Control-Allow-Origin',
+                                 'http://localhost:8000')
                 self.send_header('Access-Control-Allow-Credentials', 'true')
                 self.send_header('Content-Type', 'text/plain')
                 self.end_headers()
-                self.wfile.write(b"Process 'ollama serve' started successfully.")
+                self.wfile.write(
+                    b"Process 'ollama serve' started successfully.")
             except Exception as e:
                 self.send_response(500)
-                self.send_header('Access-Control-Allow-Origin', 'http://localhost:8000')
+                self.send_header('Access-Control-Allow-Origin',
+                                 'http://localhost:8000')
                 self.send_header('Access-Control-Allow-Credentials', 'true')
                 self.send_header('Content-Type', 'text/plain')
                 self.end_headers()
@@ -74,6 +88,34 @@ class MyRequestHandler(BaseHTTPRequestHandler):
         else:
             self.send_response(404)
             self.end_headers()
+
+
+    def do_POST(self):
+        if self.path == '/upload':
+            form = cgi.FieldStorage(
+                fp=self.rfile,
+                headers=self.headers,
+                environ={'REQUEST_METHOD': 'POST'}
+            )
+
+            fileitem = form['file']
+            if fileitem.file:
+                # It's an uploaded file; save it to a temp file
+                filename = os.path.basename(fileitem.filename)
+                temp_file = tempfile.NamedTemporaryFile(
+                    delete=False, suffix=f'-{filename.replace(" ", "_")}')
+                temp_file.write(fileitem.file.read())
+                temp_file.close()
+
+                # Send a 200 OK response
+                self.send_response(200)
+                self.send_header('Access-Control-Allow-Origin',
+                                'http://localhost:8000')
+                self.send_header('Access-Control-Allow-Credentials', 'true')
+                self.end_headers()
+                # Return the full file path to the client
+                self.wfile.write(temp_file.name.encode())
+
 
 httpd = HTTPServer(('localhost', 8001), MyRequestHandler)
 print(f"Serving utility functions on port 8001")

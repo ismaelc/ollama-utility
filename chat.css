@@ -143,3 +143,8 @@ body {
 #system-text-modal {
   white-space: pre-wrap;
 }
+
+.bi-upload.disabled {
+  color: #6c757d; /* Bootstrap's 'secondary' color */
+  cursor: not-allowed;
+}

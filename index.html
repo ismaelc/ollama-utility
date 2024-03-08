@@ -1,19 +1,29 @@
 <!DOCTYPE html>
 <html>
-
-<head>
+  <head>
     <title>Ollama Utility</title>
-    <link rel="shortcut icon" type="image/x-icon" href="images/bolt.ico">
-    <link href="resources/bootstrap.min.css" rel="stylesheet"
-        integrity="sha384-4bw+/aepP/YC94hEpVNVgiZdgIC5+VKNBQNGCHeKRQN+PtmoHDEXuppvnDJzQIu9" crossorigin="anonymous">
-    <script src="resources/bootstrap.bundle.min.js"
-        integrity="sha384-HwwvtgBNo3bZJJLYd8oVXjrBZt8cqVSpeBNS5n7C8IVInixGAoxmnlMuBnhbgrkm"
-        crossorigin="anonymous"></script>
-    <script src="resources/marked.min.js"
-        integrity="sha384-dZulhREgb+hCgQMhZ2VG0l37VQj5pJBq2w0h7Jn3tdMn36aXNepF1+FMLBB4O649"
-        crossorigin="anonymous"></script>
-    <script src="resources/purify.min.js" integrity="sha256-QigBQMy2be3IqJD2ezKJUJ5gycSmyYlRHj2VGBuITpU="
-        crossorigin="anonymous"></script>
+    <link rel="shortcut icon" type="image/x-icon" href="images/bolt.ico" />
+    <link
+      href="resources/bootstrap.min.css"
+      rel="stylesheet"
+      integrity="sha384-4bw+/aepP/YC94hEpVNVgiZdgIC5+VKNBQNGCHeKRQN+PtmoHDEXuppvnDJzQIu9"
+      crossorigin="anonymous"
+    />
+    <script
+      src="resources/bootstrap.bundle.min.js"
+      integrity="sha384-HwwvtgBNo3bZJJLYd8oVXjrBZt8cqVSpeBNS5n7C8IVInixGAoxmnlMuBnhbgrkm"
+      crossorigin="anonymous"
+    ></script>
+    <script
+      src="resources/marked.min.js"
+      integrity="sha384-dZulhREgb+hCgQMhZ2VG0l37VQj5pJBq2w0h7Jn3tdMn36aXNepF1+FMLBB4O649"
+      crossorigin="anonymous"
+    ></script>
+    <script
+      src="resources/purify.min.js"
+      integrity="sha256-QigBQMy2be3IqJD2ezKJUJ5gycSmyYlRHj2VGBuITpU="
+      crossorigin="anonymous"
+    ></script>
     <!--
     <script src="/resources/base64js.min.js"></script>
     <script type="module" src="/resources/chunk-HXW345QN.js"></script>
@@ -21,221 +31,460 @@
     -->
     <script src="https://unpkg.com/gpt-tokenizer"></script>
     <script>
-        // the package is now available as a global:
-        const { encode, decode } = GPTTokenizer_cl100k_base
+      // the package is now available as a global:
+      const { encode, decode } = GPTTokenizer_cl100k_base;
     </script>
     <!-- <link rel="stylesheet" href="chat.css"> -->
-    <link href="https://cdn.jsdelivr.net/npm/bootstrap-icons@1.7.2/font/bootstrap-icons.css" rel="stylesheet">
-</head>
+    <link
+      href="https://cdn.jsdelivr.net/npm/bootstrap-icons@1.7.2/font/bootstrap-icons.css"
+      rel="stylesheet"
+    />
+  </head>
 
-<body data-bs-theme="dark">
+  <body data-bs-theme="dark">
     <div class="container" id="ollama-panel">
-        <div class="row pt-3">
-            <div class="col-md-8 col-12">
-                <h4>Ollama Utility</h4>
-                <div class="form-check">
-                    <input class="form-check-input" type="radio" name="utilityOption" id="chatOption" value="chat" checked>
-                    <label class="form-check-label" for="chatOption">
-                        Chat
-                    </label>
-                </div>
-                <div class="form-check">
-                    <input class="form-check-input" type="radio" name="utilityOption" id="notepadOption"
-                        value="notepad">
-                    <label class="form-check-label" for="notepadOption">
-                        Notepad
-                    </label>
-                </div>
-                <div class="form-check">
-                    <input class="form-check-input" type="radio" name="utilityOption" id="functionOption" value="function">
-                    <label class="form-check-label" for="functionOption">
-                        Function Calling
-                    </label>
-                </div>
-            </div>
-            <div id="model-controls" class="col-md-4 col-12 text-md-end text-start mb-3">
-                <div>
-                    <div class="d-flex align-items-center mb-2">
-                        <label for="model-select" class="form-label me-2" style="font-size: smaller;">Model:</label>
-                        <select class="form-select" id="model-select" style="width: auto;"></select>
-                        <i class="bi bi-gear-fill gear-icon"></i>
-                    </div>
-                    <div class="d-flex align-items-center mb-2">
-                        <label for="system-text" class="form-label me-2" style="font-size: smaller;">System
-                            text:</label>
-                        <input class="form-control" id="system-text" type="text" style="width: auto;" size="31">
-                        <i class="bi bi-pencil-fill pencil-icon"></i>
-                    </div>
-                </div>
-            </div>
-            <div id="session-controls" class="col-12">
-                <div class="d-flex align-items-center">
-                    <button id="import-button" class="btn btn-primary me-2" type="button">Import</button>
-                    <button id="export-button" class="btn btn-primary me-2" type="button">Export</button>
-                    <!-- <label for="chat-select" class="form-label me-2" style="font-size: smaller;">Session:</label> -->
-                    <select id="chat-select" class="form-select" style="width: auto;">
-                        <option value="" disabled selected>Select a session</option>
-                    </select>
-                    <input type="file" id="file-input" style="display: none;" multiple>
-                </div>
-            </div>
+      <div class="row pt-3">
+        <div class="col-md-8 col-12">
+          <h4>Ollama Utility</h4>
+          <div class="form-check">
+            <input
+              class="form-check-input"
+              type="radio"
+              name="utilityOption"
+              id="chatOption"
+              value="chat"
+              checked
+            />
+            <label class="form-check-label" for="chatOption"> Chat </label>
+          </div>
+          <div class="form-check">
+            <input
+              class="form-check-input"
+              type="radio"
+              name="utilityOption"
+              id="notepadOption"
+              value="notepad"
+            />
+            <label class="form-check-label" for="notepadOption">
+              Notepad
+            </label>
+          </div>
+          <div class="form-check">
+            <input
+              class="form-check-input"
+              type="radio"
+              name="utilityOption"
+              id="functionOption"
+              value="function"
+            />
+            <label class="form-check-label" for="functionOption">
+              Function Calling
+            </label>
+          </div>
         </div>
+        <div
+          id="model-controls"
+          class="col-md-4 col-12 text-md-end text-start mb-3"
+        >
+          <div>
+            <div class="d-flex align-items-center mb-2">
+              <label
+                for="model-select"
+                class="form-label me-2"
+                style="font-size: smaller"
+                >Model:</label
+              >
+              <select
+                class="form-select"
+                id="model-select"
+                style="width: auto"
+              ></select>
+              <i class="bi bi-gear-fill gear-icon"></i>
+            </div>
+            <div class="d-flex align-items-center mb-2">
+              <label
+                for="system-text"
+                class="form-label me-2"
+                style="font-size: smaller"
+                >System text:</label
+              >
+              <input
+                class="form-control"
+                id="system-text"
+                type="text"
+                style="width: auto"
+                size="31"
+              />
+              <i class="bi bi-pencil-fill pencil-icon"></i>
+            </div>
+            <div class="d-flex align-items-center mb-2">
+              <label
+                for="file-input"
+                class="form-label me-2"
+                style="font-size: smaller"
+                >File/folder/url:</label
+              >
+              <input
+                class="form-control"
+                id="file-path"
+                type="text"
+                placeholder="Or type file path here"
+                style="width: auto; flex: 1"
+                size="31"
+              />
+              <label
+                for="file-input"
+                id="upload-icon"
+                class="bi bi-upload"
+                style="font-size: 1rem; cursor: pointer; margin-left: 0.5rem"
+              ></label>
+              <input
+                class="form-control"
+                id="file-input"
+                type="file"
+                style="display: none"
+              />
+            </div>
+          </div>
+        </div>
+        <div id="session-controls" class="col-12">
+          <div class="d-flex align-items-center">
+            <button
+              id="import-button"
+              class="btn btn-primary me-2"
+              type="button"
+            >
+              Import
+            </button>
+            <button
+              id="export-button"
+              class="btn btn-primary me-2"
+              type="button"
+            >
+              Export
+            </button>
+            <!-- <label for="chat-select" class="form-label me-2" style="font-size: smaller;">Session:</label> -->
+            <select id="chat-select" class="form-select" style="width: auto">
+              <option value="" disabled selected>Select a session</option>
+            </select>
+            <input
+              type="file"
+              id="session-input"
+              style="display: none"
+              multiple
+            />
+          </div>
+        </div>
+      </div>
     </div>
     <div class="container" id="chat-container">
-        <div id="scroll-wrapper">
-            <div class="card">
-                <div class="text-end">
-                    <label id="timer-label-chat" class="me-2">Time: 0s</label>
-                    <label id="token-counter" class="me-2">Tokens: 0</label>
-                    <button id="delete-chat" class="btn btn-danger" type="button">Delete Chat</button>
-                    <button id="save-chat" class="btn btn-secondary" type="button" data-bs-toggle="modal"
-                        data-bs-target="#nameModal">Save Chat</button>
-                </div>
-                <div class="card-body">
-                    <div id="chat-history"></div>
-                </div>
-            </div>
-        </div>
-        <div class="container p-2 card" id="chat-input-area">
-            <div class="input-group">
-                <textarea class="form-control" id="user-input" placeholder="Type your message here..."
-                    rows="3"></textarea>
-                <button id="send-button" class="btn btn-primary"
-                    style="background-color: green; color: white; border: 2px solid green;">Send</button>
-            </div>
-        </div>
-    </div>
-    <div class="container" id="notepad-container" style="display: none;">
+      <div id="scroll-wrapper">
         <div class="card">
-            <div style="display: flex; justify-content: space-between;"> <!-- Add flexbox layout -->
-                <div> <!-- Wrap buttons in a div -->
-                    <button id="stop-generate-button" class="btn btn-danger" type="button">Stop</button>
-                    <button id="generate-button" class="btn btn-primary" type="button"
-                        style="background-color: green; color: white; border: 2px solid green;">Generate</button>
-                </div>
-                <div class="text-end">
-                    <label id="timer-label-notepad" class="me-2">Time: 0s</label>
-                    <label id="notepad-token-counter" class="me-2">Tokens: 0</label>
-                    <button id="delete-notepad" class="btn btn-danger" type="button">Delete Notepad</button>
-                    <button id="save-notepad" class="btn btn-secondary" type="button" data-bs-toggle="modal"
-                        data-bs-target="#nameModal">Save Notepad</button>
-                </div>
-            </div>
-            <div class="card-body">
-                <div id="notepad-panels" style="display: flex; height: 100vh; gap: 10px;">
-                    <textarea id="notepad1" style="flex: 1; height: 100%; resize: none;"></textarea>
-                    <textarea id="notepad2" style="flex: 1; height: 100%; resize: none;"></textarea>
-                </div>
-            </div>
+          <div class="text-end">
+            <label id="timer-label-chat" class="me-2">Time: 0s</label>
+            <label id="token-counter" class="me-2">Tokens: 0</label>
+            <button id="delete-chat" class="btn btn-danger" type="button">
+              Delete Chat
+            </button>
+            <button
+              id="save-chat"
+              class="btn btn-secondary"
+              type="button"
+              data-bs-toggle="modal"
+              data-bs-target="#nameModal"
+            >
+              Save Chat
+            </button>
+          </div>
+          <div class="card-body">
+            <div id="chat-history"></div>
+          </div>
         </div>
+      </div>
+      <div class="container p-2 card" id="chat-input-area">
+        <div class="input-group">
+          <textarea
+            class="form-control"
+            id="user-input"
+            placeholder="Type your message here..."
+            rows="3"
+          ></textarea>
+          <button
+            id="send-button"
+            class="btn btn-primary"
+            style="
+              background-color: green;
+              color: white;
+              border: 2px solid green;
+            "
+          >
+            Send
+          </button>
+        </div>
+      </div>
     </div>
-
+    <div class="container" id="notepad-container" style="display: none">
+      <div class="card">
+        <div style="display: flex; justify-content: space-between">
+          <!-- Add flexbox layout -->
+          <div>
+            <!-- Wrap buttons in a div -->
+            <button
+              id="stop-generate-button"
+              class="btn btn-danger"
+              type="button"
+            >
+              Stop
+            </button>
+            <button
+              id="generate-button"
+              class="btn btn-primary"
+              type="button"
+              style="
+                background-color: green;
+                color: white;
+                border: 2px solid green;
+              "
+            >
+              Generate
+            </button>
+          </div>
+          <div class="text-end">
+            <label id="timer-label-notepad" class="me-2">Time: 0s</label>
+            <label id="notepad-token-counter" class="me-2">Tokens: 0</label>
+            <button id="delete-notepad" class="btn btn-danger" type="button">
+              Delete Notepad
+            </button>
+            <button
+              id="save-notepad"
+              class="btn btn-secondary"
+              type="button"
+              data-bs-toggle="modal"
+              data-bs-target="#nameModal"
+            >
+              Save Notepad
+            </button>
+          </div>
+        </div>
+        <div class="card-body">
+          <div
+            id="notepad-panels"
+            style="display: flex; height: 100vh; gap: 10px"
+          >
+            <textarea
+              id="notepad1"
+              style="flex: 1; height: 100%; resize: none"
+            ></textarea>
+            <textarea
+              id="notepad2"
+              style="flex: 1; height: 100%; resize: none"
+            ></textarea>
+          </div>
+        </div>
+      </div>
+    </div>
 
     <!-- Modal -->
-    <div class="modal fade" id="nameModal" tabindex="-1" aria-labelledby="nameModalLabel" aria-hidden="true">
-        <div class="modal-dialog">
-            <div class="modal-content">
-                <div class="modal-header">
-                    <h5 class="modal-title" id="nameModalLabel">Enter session name</h5>
-                    <button type="button" class="btn-close" data-bs-dismiss="modal" aria-label="Close"></button>
-                </div>
-                <div class="modal-body">
-                    <input type="text" class="form-control" id="userName" placeholder="Session name">
-                </div>
-                <div class="modal-footer">
-                    <button type="button" class="btn btn-secondary" data-bs-dismiss="modal">Close</button>
-                    <button type="button" class="btn btn-primary" id="saveName">Save</button>
-                </div>
-            </div>
+    <div
+      class="modal fade"
+      id="nameModal"
+      tabindex="-1"
+      aria-labelledby="nameModalLabel"
+      aria-hidden="true"
+    >
+      <div class="modal-dialog">
+        <div class="modal-content">
+          <div class="modal-header">
+            <h5 class="modal-title" id="nameModalLabel">Enter session name</h5>
+            <button
+              type="button"
+              class="btn-close"
+              data-bs-dismiss="modal"
+              aria-label="Close"
+            ></button>
+          </div>
+          <div class="modal-body">
+            <input
+              type="text"
+              class="form-control"
+              id="userName"
+              placeholder="Session name"
+            />
+          </div>
+          <div class="modal-footer">
+            <button
+              type="button"
+              class="btn btn-secondary"
+              data-bs-dismiss="modal"
+            >
+              Close
+            </button>
+            <button type="button" class="btn btn-primary" id="saveName">
+              Save
+            </button>
+          </div>
         </div>
+      </div>
     </div>
 
     <div class="modal fade" id="errorModal" tabindex="-1">
-        <div class="modal-dialog modal-xl">
-            <div class="modal-content">
-                <div class="modal-header">
-                    <h5 class="modal-title">Oops error!</h5>
-                    <button type="button" class="btn-close" data-bs-dismiss="modal"></button>
-                </div>
-                <div class="modal-body">
-                    <p id="errorText"></p>
-                </div>
-            </div>
+      <div class="modal-dialog modal-xl">
+        <div class="modal-content">
+          <div class="modal-header">
+            <h5 class="modal-title">Oops error!</h5>
+            <button
+              type="button"
+              class="btn-close"
+              data-bs-dismiss="modal"
+            ></button>
+          </div>
+          <div class="modal-body">
+            <p id="errorText"></p>
+          </div>
         </div>
+      </div>
     </div>
 
     <!-- Settings Modal -->
-    <div class="modal fade" id="settingsModal" tabindex="-1" aria-labelledby="settingsModalLabel" aria-hidden="true">
-        <div class="modal-dialog">
-            <div class="modal-content">
-                <div class="modal-header">
-                    <h5 class="modal-title" id="settingsModalLabel">Settings</h5>
-                    <button type="button" class="btn-close" data-bs-dismiss="modal" aria-label="Close"></button>
+    <div
+      class="modal fade"
+      id="settingsModal"
+      tabindex="-1"
+      aria-labelledby="settingsModalLabel"
+      aria-hidden="true"
+    >
+      <div class="modal-dialog">
+        <div class="modal-content">
+          <div class="modal-header">
+            <h5 class="modal-title" id="settingsModalLabel">Settings</h5>
+            <button
+              type="button"
+              class="btn-close"
+              data-bs-dismiss="modal"
+              aria-label="Close"
+            ></button>
+          </div>
+          <div class="modal-body">
+            <form>
+              <div id="host-address-select">
+                <div class="mb-3">
+                  <label for="host-address" class="form-label">Hostname</label>
+                  <input
+                    type="text"
+                    class="form-control"
+                    id="host-address"
+                    placeholder="http://localhost:11434"
+                  />
                 </div>
-                <div class="modal-body">
-                    <form>
-                        <div id="host-address-select">
-                            <div class="mb-3">
-                                <label for="host-address" class="form-label">Hostname</label>
-                                <input type="text" class="form-control" id="host-address" placeholder="http://localhost:11434">
-                              </div>
-                        </div>
-                        <div class="mb-3">
-                            <label for="temperature" class="form-label">temperature (0 - 1)</label>
-                            <input type="number" class="form-control" id="temperature" placeholder="Enter temperature">
-                        </div>
-                        <div class="mb-3">
-                            <label for="num-ctx" class="form-label">num_ctx</label>
-                            <input type="number" class="form-control" id="num-ct" placeholder="Enter num_ctx">
-                        </div>
-                        <div class="mb-3">
-                            <label for="num-predict" class="form-label">num_predict</label>
-                            <input type="number" class="form-control" id="num-predict" placeholder="Enter num_predict">
-                        </div>
-                    </form>
-                </div>
-                <div class="modal-footer">
-                    <button type="button" class="btn btn-secondary" data-bs-dismiss="modal">Close</button>
-                    <button type="button" class="btn btn-primary" id="saveSettings">Save changes</button>
-                </div>
-            </div>
+              </div>
+              <div class="mb-3">
+                <label for="temperature" class="form-label"
+                  >temperature (0 - 1)</label
+                >
+                <input
+                  type="number"
+                  class="form-control"
+                  id="temperature"
+                  placeholder="Enter temperature"
+                />
+              </div>
+              <div class="mb-3">
+                <label for="num-ctx" class="form-label">num_ctx</label>
+                <input
+                  type="number"
+                  class="form-control"
+                  id="num-ct"
+                  placeholder="Enter num_ctx"
+                />
+              </div>
+              <div class="mb-3">
+                <label for="num-predict" class="form-label">num_predict</label>
+                <input
+                  type="number"
+                  class="form-control"
+                  id="num-predict"
+                  placeholder="Enter num_predict"
+                />
+              </div>
+            </form>
+          </div>
+          <div class="modal-footer">
+            <button
+              type="button"
+              class="btn btn-secondary"
+              data-bs-dismiss="modal"
+            >
+              Close
+            </button>
+            <button type="button" class="btn btn-primary" id="saveSettings">
+              Save changes
+            </button>
+          </div>
         </div>
+      </div>
     </div>
 
     <!-- Edit System Text Modal -->
-    <div class="modal fade" id="editSystemTextModal" tabindex="-1" aria-labelledby="editSystemTextModalLabel" aria-hidden="true">
-        <div class="modal-dialog">
-            <div class="modal-content">
-                <div class="modal-header">
-                    <h5 class="modal-title" id="editSystemTextModalLabel">Edit System Text</h5>
-                    <button type="button" class="btn-close" data-bs-dismiss="modal" aria-label="Close"></button>
-                </div>
-                <div class="modal-body">
-                    <textarea class="form-control" id="system-text-modal" rows="5"></textarea>
-                </div>
-                <div class="modal-footer">
-                    <button type="button" class="btn btn-secondary" data-bs-dismiss="modal">Close</button>
-                    <button type="button" class="btn btn-primary" id="saveSystemTextModal">Save changes</button>
-                </div>
-            </div>
+    <div
+      class="modal fade"
+      id="editSystemTextModal"
+      tabindex="-1"
+      aria-labelledby="editSystemTextModalLabel"
+      aria-hidden="true"
+    >
+      <div class="modal-dialog">
+        <div class="modal-content">
+          <div class="modal-header">
+            <h5 class="modal-title" id="editSystemTextModalLabel">
+              Edit System Text
+            </h5>
+            <button
+              type="button"
+              class="btn-close"
+              data-bs-dismiss="modal"
+              aria-label="Close"
+            ></button>
+          </div>
+          <div class="modal-body">
+            <textarea
+              class="form-control"
+              id="system-text-modal"
+              rows="5"
+            ></textarea>
+          </div>
+          <div class="modal-footer">
+            <button
+              type="button"
+              class="btn btn-secondary"
+              data-bs-dismiss="modal"
+            >
+              Close
+            </button>
+            <button
+              type="button"
+              class="btn btn-primary"
+              id="saveSystemTextModal"
+            >
+              Save changes
+            </button>
+          </div>
         </div>
+      </div>
     </div>
 
     <!-- Roundabout way of bypassing the cache during development -->
     <script>
-        var head = document.getElementsByTagName('head')[0];
-        ['api.js', 'chat.js'].forEach(function (src) {
-            var script = document.createElement('script');
-            // script.type = 'module';
-            script.src = src + '?t=' + Math.floor(Math.random() * 1000000);
-            head.appendChild(script);
-        });
-        var link = document.createElement('link');
-        link.rel = 'stylesheet';
-        link.href = 'chat.css?t=' + Math.floor(Math.random() * 1000000);
-        head.appendChild(link);
+      var head = document.getElementsByTagName("head")[0];
+      ["api.js", "chat.js"].forEach(function (src) {
+        var script = document.createElement("script");
+        // script.type = 'module';
+        script.src = src + "?t=" + Math.floor(Math.random() * 1000000);
+        head.appendChild(script);
+      });
+      var link = document.createElement("link");
+      link.rel = "stylesheet";
+      link.href = "chat.css?t=" + Math.floor(Math.random() * 1000000);
+      head.appendChild(link);
     </script>
-
-</body>
-
+  </body>
 </html>

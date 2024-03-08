@@ -129,8 +129,8 @@ document
   .getElementById("system-text")
   .addEventListener("input", saveSystemText);
 document
-  .getElementById("file-input")
-  .addEventListener("change", fileInputChange);
+  .getElementById("session-input")
+  .addEventListener("change", sessionInputChange);
 document
   .getElementById("generate-button")
   .addEventListener("click", generateText);
@@ -201,7 +201,7 @@ document.querySelector(".gear-icon").addEventListener("click", function () {
 
 document.querySelector(".pencil-icon").addEventListener("click", function () {
   // Get the system text
-  const systemText = getSystemText().replace(/\\n/g, '\n');
+  const systemText = getSystemText().replace(/\\n/g, "\n");
 
   // Set the value of the textarea in the modal
   document.getElementById("system-text-modal").value = systemText;
@@ -260,7 +260,10 @@ document
     const systemTextModal = document.getElementById("system-text-modal").value;
 
     // Set the value of the system text field
-    document.getElementById("system-text").value = systemTextModal.replace(/\n/g, "\\n");
+    document.getElementById("system-text").value = systemTextModal.replace(
+      /\n/g,
+      "\\n"
+    );
 
     // Close the modal
     let modal = bootstrap.Modal.getInstance(
@@ -271,6 +274,35 @@ document
     // Save the system text
     saveSystemText();
   });
+
+document.getElementById("file-input").addEventListener("change", function () {
+  var file = this.files[0];
+  var formData = new FormData();
+  formData.append("file", file);
+
+  fetch("http://localhost:8001/upload", {
+    method: "POST",
+    body: formData,
+  })
+    .then((response) => response.text())
+    .then((data) => {
+      console.log(data);
+      // Use the returned response as the file path for the file-path element
+      document.getElementById("file-path").value = data;
+      updateFilePathValue(data);
+    })
+    .catch((error) => console.error(error));
+});
+
+var input = document.getElementById("file-path");
+
+input.addEventListener('input', function() {
+  localStorage.setItem(generateKey("file-path"), this.value);
+});
+
+input.addEventListener('change', function() {
+  localStorage.setItem(generateKey("file-path"), this.value);
+});
 
 // -------- HELPER FUNCTIONS --------
 
@@ -360,7 +392,7 @@ function prepareData(input, parsedHistory) {
 
   const system = {
     role: "system",
-    content: decodeURIComponent(getSystemText()).replace(/\\n/g, '\n'),
+    content: decodeURIComponent(getSystemText()).replace(/\\n/g, "\n"),
   };
   let prompt = [];
   if (isValidInput(input)) {
@@ -534,7 +566,7 @@ function parseChatHistory(htmlString) {
 
 // Function to get the system text
 function getSystemText() {
-  return decodeURIComponent(document.getElementById('system-text').value);
+  return decodeURIComponent(document.getElementById("system-text").value);
 }
 
 // Save system-text to localStorage
@@ -549,7 +581,9 @@ function saveSystemText() {
 function loadSystemText() {
   let systemText = localStorage.getItem(generateKey("system-text"));
   if (systemText) {
-    document.getElementById("system-text").value = decodeURIComponent(systemText).replace(/\n/g, "\\n");
+    document.getElementById("system-text").value = decodeURIComponent(
+      systemText
+    ).replace(/\n/g, "\\n");
   }
 }
 
@@ -572,10 +606,10 @@ function exportChat() {
 
 // Function to import chat from a local file
 function importChat() {
-  document.getElementById("file-input").click();
+  document.getElementById("session-input").click();
 }
 
-function fileInputChange(e) {
+function sessionInputChange(e) {
   const files = e.target.files;
   for (let i = 0; i < files.length; i++) {
     const file = files[i];
@@ -607,7 +641,7 @@ function updateTokenCounter(element, counterId) {
   }
 
   // Add the system text to the text to count
-  const systemText = decodeURIComponent(getSystemText()).replace(/\\n/g, '\n');
+  const systemText = decodeURIComponent(getSystemText()).replace(/\\n/g, "\n");
   textToCount += systemText;
 
   const tokens = getTokens(textToCount);
@@ -687,11 +721,23 @@ function parseTextToDict(text) {
 
 function hasEncodedCharacters(str) {
   try {
-      return decodeURIComponent(str) !== str;
+    return decodeURIComponent(str) !== str;
   } catch (e) {
-      // If decodeURIComponent throws an error, it means str was not a valid encoded URI
-      return false;
+    // If decodeURIComponent throws an error, it means str was not a valid encoded URI
+    return false;
   }
+}
+
+function loadFilePath() {
+  let filePath = localStorage.getItem(generateKey("file-path"));
+  if (filePath) {
+    document.getElementById("file-path").value = filePath;
+  }
+}
+
+function updateFilePathValue(newValue) {
+  input.value = newValue;
+  localStorage.setItem(generateKey("file-path"), newValue);
 }
 
 // -------- MAIN FUNCTIONS --------
@@ -846,7 +892,7 @@ async function submitRequest() {
             `Thought: ${updatedDict["Thought"]}\n` +
             `Tool: ${updatedDict["Tool"]}\n` +
             `ToolInput: ${updatedDict["ToolInput"]}\n` +
-            `Observation: ${updatedDict["Observation"]}\n` + 
+            `Observation: ${updatedDict["Observation"]}\n` +
             `Answer: Based on above...`;
         }
 
@@ -1204,6 +1250,7 @@ window.onload = () => {
   autoFocusInput();
   loadSystemText(); // Load system text from local storage
   checkTokenCount();
+  loadFilePath();
 
   // Ensure the UI reflects the current Ollama base URL
   if (document.querySelector("#settingsModal #host-address")) {
@@ -1223,4 +1270,32 @@ window.onload = () => {
     // Display chat input area
     document.getElementById("chat-container").style.display = "block";
   }
+
+  // Get the radio buttons and the file input
+  const radios = document.querySelectorAll('input[name="utilityOption"]');
+  const fileInput = document.getElementById("file-input");
+  const filePath = document.getElementById("file-path");
+  const uploadIcon = document.getElementById("upload-icon");
+
+  // Add an event listener to each radio button
+  radios.forEach((radio) => {
+    radio.addEventListener("change", () => {
+      // If the selected radio button is 'functionOption', enable the file input
+      if (radio.id === "functionOption") {
+        fileInput.disabled = false;
+        filePath.disabled = false;
+        uploadIcon.classList.remove("disabled");
+      } else {
+        // Otherwise, disable the file input
+        fileInput.disabled = true;
+        filePath.disabled = true;
+        uploadIcon.classList.add("disabled");
+      }
+    });
+  });
+
+  // Disable the file input and file path input initially
+  document.getElementById("file-input").disabled = true;
+  document.getElementById("file-path").disabled = true;
+  uploadIcon.classList.add('disabled'); // Add the 'disabled' class
 };
