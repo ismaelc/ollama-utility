@@ -6,44 +6,49 @@ PYTHON_SERVER_PORT = 8001
 
 # Default task that checks for ollama, checks for model, downloads the assets and starts the ollama, web, and Python servers
 default: check_ollama check_python download_resources
-	@$(MAKE) ollama_server check_model python_server web_server 
+		@$(MAKE) ollama_server check_model python_server web_server
 
 # Check if ollama is installed and update it
 check_ollama:
-	@if ! command -v ollama > /dev/null; then \
-		echo "Installing ollama..."; \
-		if [ `uname` = "Darwin" ]; then \
-			brew install ollama; \
-			brew upgrade ollama; \
-		else \
-			curl -fsSL https://ollama.com/install.sh | sh; \
-		fi \
-	fi
-#	else \
-#		echo "Checking for ollama updates..."; \
-#		if [ `uname` = "Darwin" ]; then \
-#			brew upgrade ollama; \
-#		fi \
-#	fi
+	#
+	# [check_ollama]
+    @if ! command -v ollama > /dev/null; then \
+        echo "Installing ollama..."; \
+        if [ `uname` = "Darwin" ]; then \
+            brew install ollama; \
+            brew upgrade ollama; \
+        else \
+            curl -fsSL https://ollama.com/install.sh | sh; \
+        fi \
+    fi
+    
+#   else \
+#       echo "Checking for ollama updates..."; \
+#       if [ `uname` = "Darwin" ]; then \
+#           brew upgrade ollama; \
+#       fi \
+#   fi
 
 # Check if Python is installed and install it if not
 check_python:
-	# Check if Python is installed and install it if not
-	@if ! command -v python3 > /dev/null; then \
-		echo "Python is not installed. Installing..."; \
-		if [ `uname` = "Darwin" ]; then \
-			brew install python3; \
-		else \
-			sudo apt-get update; \
-			sudo apt-get install -y python3.8; \
-		fi; \
-	else \
-		echo "Python is already installed."; \
-	fi
+	#
+	# [check_python]
+    @if ! command -v python3 > /dev/null; then \
+        echo "Python is not installed. Installing..."; \
+        if [ `uname` = "Darwin" ]; then \
+            brew install python3; \
+        else \
+            sudo apt-get update; \
+            sudo apt-get install -y python3.8; \
+        fi; \
+    else \
+        echo "Python is already installed."; \
+    fi
 
 # Task to download resources
 download_resources:
-	# Check if resources directory exists, if not create it
+	#
+	# [download_resources]
 	@if [ ! -d "resources" ]; then \
 		mkdir -p ./resources/ && \
 		cd ./resources/ && \
@@ -55,41 +60,43 @@ download_resources:
 	# Check SHA-256 hash
 	@shasum -a 256 -c resources.hash || exit 1
 
-# Ollama Server
 ollama_server:
-	@echo "Checking if ollama serve is already running..."
+	#
+	# [ollama_server]
 	@OS=$$(uname)
 	@PID=$$(pgrep -f "ollama serve")
-	@if [ "$$OS" = "Darwin" ] && [ -n "$$PID" ]; then \
-		echo "Killing existing ollama server process $$PID"; \
-		kill -9 $$PID || echo "Could not kill process $$PID. Operation not permitted"; \
-	elif [ "$$OS" = "Linux" ] && [ -z "$$PID" ]; then \
-		echo "Starting ollama server..."; \
-		export OLLAMA_ORIGINS=http://localhost:$(WEB_SERVER_PORT); \
-		ollama serve & \
+	@if [ -n "$$PID" ]; then \
+    	@echo "Killing existing ollama server process $$PID"; \
+    	kill -9 $$PID || echo "Could not kill process $$PID. Operation not permitted"; \
 	fi
+	@echo "Starting ollama server..."
+	@export OLLAMA_ORIGINS=http://localhost:$(WEB_SERVER_PORT)
+	@ollama serve || echo "Could not start ollama server. Please make sure that ollama is installed and running." &
 
 # Check if model exists
 check_model:
-	# Check if model exists, if not pull it
+	#
+	# [check_model]
 	@if ! ollama list | grep -q "$(MODEL_NAME)"; then \
-		ollama pull $(MODEL_NAME); \
+    	ollama pull $(MODEL_NAME); \
 	fi
 
 # Python Server
 python_server:
-	# Kill process using port $(PYTHON_SERVER_PORT) if exists
+	#
+	# [python_server]
 	@echo "Checking for any process using port $(PYTHON_SERVER_PORT)..."
 	@PID=$$(lsof -ti:$(PYTHON_SERVER_PORT)); if [ -n "$$PID" ]; then echo "Killing process $$PID using port $(PYTHON_SERVER_PORT)"; kill $$PID; fi
 	@echo "Starting Python server on port $(PYTHON_SERVER_PORT)..."
-	@python3 server.py &
+	@python3 server.py $(PYTHON_SERVER_PORT) &
 
 # Web Server
 web_server:
-	# Kill process using port $(WEB_SERVER_PORT) if exists
+	#
+	# [web_server]
 	@echo "Checking for any process using port $(WEB_SERVER_PORT)..."
 	@PID=$$(lsof -ti:$(WEB_SERVER_PORT)); if [ -n "$$PID" ]; then echo "Killing process $$PID using port $(WEB_SERVER_PORT)"; kill -9 $$PID || echo "Could not kill process $$PID. Operation not permitted"; fi
-	@echo "Starting web server on port $(WEB_SERVER_PORT)..."
+	@echo "Web server is about to start on [http://localhost:$(WEB_SERVER_PORT)/]. If no error messages follow, it started successfully."
 	@python3 -m http.server $(WEB_SERVER_PORT) --bind 127.0.0.1
 
 clean:

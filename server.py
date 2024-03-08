@@ -2,6 +2,7 @@ from http.server import HTTPServer, BaseHTTPRequestHandler
 from urllib.parse import urlparse, parse_qs
 import subprocess
 import importlib
+import argparse
 
 class MyRequestHandler(BaseHTTPRequestHandler):
 
@@ -75,6 +76,11 @@ class MyRequestHandler(BaseHTTPRequestHandler):
             self.send_response(404)
             self.end_headers()
 
-httpd = HTTPServer(('localhost', 8001), MyRequestHandler)
-print(f"Serving utility functions on port 8001")
+# Create a parser
+parser = argparse.ArgumentParser(description="HTTP Server")
+parser.add_argument('port', type=int, help='Listening port for the HTTP Server')
+args = parser.parse_args()
+
+httpd = HTTPServer(('localhost', args.port), MyRequestHandler)
+print(f"Serving utility functions on port {args.port}")
 httpd.serve_forever()
