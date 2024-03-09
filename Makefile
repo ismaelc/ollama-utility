@@ -63,15 +63,15 @@ download_resources:
 ollama_server:
 	#
 	# [ollama_server]
-	@OS=$$(uname)
-	@PID=$$(pgrep -f "ollama serve")
-	@if [ -n "$$PID" ]; then \
-    	@echo "Killing existing ollama server process $$PID"; \
+	OS=$$(uname); \
+	PID=$$(pgrep -f "ollama serve"); \
+	if [ -n "$$PID" ]; then \
+    	echo "Killing existing ollama server process $$PID"; \
     	kill -9 $$PID || echo "Could not kill process $$PID. Operation not permitted"; \
-	fi
-	@echo "Starting ollama server..."
-	@export OLLAMA_ORIGINS=http://localhost:$(WEB_SERVER_PORT)
-	@ollama serve || echo "Could not start ollama server. Please make sure that ollama is installed and running." &
+	fi; \
+	echo "Starting ollama server..."; \
+	export OLLAMA_ORIGINS=http://localhost:$(WEB_SERVER_PORT); \
+	ollama serve || echo "Could not start ollama server. Please make sure that ollama is installed and running." &
 
 # Check if model exists
 check_model:
@@ -85,19 +85,19 @@ check_model:
 python_server:
 	#
 	# [python_server]
-	@echo "Checking for any process using port $(PYTHON_SERVER_PORT)..."
-	@PID=$$(lsof -ti:$(PYTHON_SERVER_PORT)); if [ -n "$$PID" ]; then echo "Killing process $$PID using port $(PYTHON_SERVER_PORT)"; kill $$PID; fi
-	@echo "Starting Python server on port $(PYTHON_SERVER_PORT)..."
-	@python3 server.py $(PYTHON_SERVER_PORT) &
+	echo "Checking for any process using port $(PYTHON_SERVER_PORT)..."
+	PID=$$(lsof -ti:$(PYTHON_SERVER_PORT)); if [ -n "$$PID" ]; then echo "Killing process $$PID using port $(PYTHON_SERVER_PORT)"; kill $$PID; fi
+	echo "Starting Python server on port $(PYTHON_SERVER_PORT)..."
+	python3 server.py $(PYTHON_SERVER_PORT) &
 
 # Web Server
 web_server:
 	#
 	# [web_server]
-	@echo "Checking for any process using port $(WEB_SERVER_PORT)..."
-	@PID=$$(lsof -ti:$(WEB_SERVER_PORT)); if [ -n "$$PID" ]; then echo "Killing process $$PID using port $(WEB_SERVER_PORT)"; kill -9 $$PID || echo "Could not kill process $$PID. Operation not permitted"; fi
-	@echo "Web server is about to start on [http://localhost:$(WEB_SERVER_PORT)/]. If no error messages follow, it started successfully."
-	@python3 -m http.server $(WEB_SERVER_PORT) --bind 127.0.0.1
+	echo "Checking for any process using port $(WEB_SERVER_PORT)..."
+	PID=$$(lsof -ti:$(WEB_SERVER_PORT)); if [ -n "$$PID" ]; then echo "Killing process $$PID using port $(WEB_SERVER_PORT)"; kill -9 $$PID || echo "Could not kill process $$PID. Operation not permitted"; fi
+	echo "Web server is about to start on [http://localhost:$(WEB_SERVER_PORT)/]. If no error messages follow, it started successfully."
+	python3 -m http.server $(WEB_SERVER_PORT) --bind 127.0.0.1
 
 clean:
 	@rm -rf ./resources
