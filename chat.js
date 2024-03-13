@@ -25,7 +25,7 @@ const deleteIcon = `<svg xmlns="http://www.w3.org/2000/svg" width="16" height="1
 </svg>`;
 
 const TEMPERATURE = 0.1;
-const NUM_CONTEXT = 8000;
+const NUM_CONTEXT = 0;
 const NUM_PREDICT = 32000;
 
 // -------- GLOBALS --------
@@ -367,11 +367,18 @@ function getModelOptions() {
     }
   }
 
-  return {
+  // Create the options object
+  let options = {
     temperature: temperature,
-    num_ctx: num_ctx,
     num_predict: num_predict,
   };
+
+  // Add num_ctx to the options object only if it's not zero
+  if (num_ctx !== 0) {
+    options.num_ctx = num_ctx;
+  }
+
+  return options;
 }
 
 function displayChatContainer() {

@@ -3,6 +3,9 @@ $owner = "ismaelc"
 $repo = "ollama-utility"
 $branch = "main"  # Replace with the desired branch, tag, or commit
 
+# Save the current directory
+$originalDirectory = Get-Location
+
 # Set the download URL
 $downloadUrl = "https://github.com/$owner/$repo/archive/$branch.zip"
 
@@ -42,3 +45,8 @@ Remove-Item -Path $extractedDirectory.FullName -Force -Recurse
 Remove-Item -Path $localZipFile
 
 Write-Host "Repository downloaded and extracted successfully."
+
+# Return to the original directory
+Set-Location $originalDirectory
+
+Write-Host "Repository downloaded, extracted, and returned to original directory successfully."

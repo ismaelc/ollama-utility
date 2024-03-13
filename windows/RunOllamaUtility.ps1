@@ -8,7 +8,6 @@ function Default-Task {
         Write-Host "Ollama is not installed. Aborting."
         return
     }
-    
 
     if (-not (Check-Python)) {
         Write-Host "Python is not installed. Aborting."
@@ -24,7 +23,6 @@ function Default-Task {
 
 # Check if ollama is installed
 function Check-Ollama {
-    # Check if ollama is installed
     if (-not (Get-Command ollama -ErrorAction SilentlyContinue)) {
         return $false
     }
@@ -43,10 +41,10 @@ function Check-Python {
 # Task to download resources
 function Download-Resources {
     $resourcesDir = ".\ollama-utility\resources"
-    # Check if resources directory exists, if not create it
     if (-not (Test-Path $resourcesDir -PathType Container)) {
         Write-Host "Creating resources directory..."
         New-Item -ItemType Directory -Path $resourcesDir | Out-Null
+        Push-Location
         Set-Location $resourcesDir
 
         Write-Host "Downloading resources..."
@@ -54,16 +52,12 @@ function Download-Resources {
         Invoke-WebRequest -Uri "https://cdn.jsdelivr.net/npm/bootstrap@5.3.1/dist/js/bootstrap.bundle.min.js" -OutFile "bootstrap.bundle.min.js"
         Invoke-WebRequest -Uri "https://cdn.jsdelivr.net/npm/marked@6.0.0/marked.min.js" -OutFile "marked.min.js"
         Invoke-WebRequest -Uri "https://cdn.jsdelivr.net/npm/dompurify@3.0.5/dist/purify.min.js" -OutFile "purify.min.js"
+        Pop-Location
     }
-
-    # Check SHA-256 hash
-    # Write-Host "Checking SHA-256 hash..."
-    # Your SHA-256 checking code goes here
 }
 
 # Start Ollama Server
 function Start-OllamaServer {
-    # Check if ollama serve is already running, if not start it
     $ollamaProcess = Get-Process | Where-Object {$_.ProcessName -eq "ollama"}
     if (-not $ollamaProcess) {
         Write-Host "Starting Ollama Server..."
@@ -74,7 +68,6 @@ function Start-OllamaServer {
 
 # Check if model exists
 function Check-Model {
-    # Check if model exists
     $modelExists = (ollama list) -match $ModelName
     if (-not $modelExists) {
         Write-Host "Model $ModelName not found. Pulling..."
@@ -98,9 +91,10 @@ function Start-WebServer {
         Write-Host "Ollama utility directory not found. Exiting."
         return
     }
+    Push-Location
     Set-Location $ollamaUtilityDir
     python -m http.server $PortWeb --bind 127.0.0.1
+    Pop-Location
 }
 
-# Main entry point
 Default-Task
