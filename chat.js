@@ -296,11 +296,11 @@ document.getElementById("file-input").addEventListener("change", function () {
 
 var input = document.getElementById("file-path");
 
-input.addEventListener('input', function() {
+input.addEventListener("input", function () {
   localStorage.setItem(generateKey("file-path"), this.value);
 });
 
-input.addEventListener('change', function() {
+input.addEventListener("change", function () {
   localStorage.setItem(generateKey("file-path"), this.value);
 });
 
@@ -1084,7 +1084,7 @@ function deleteSession(elementId) {
   updateChatListAndSelection();
 }
 
-function saveSession(sessionName, history, selectedOption) {
+function saveSession(sessionName, history, selectedOption, filePath) {
   if (sessionName === null || sessionName.trim() === "") return;
 
   // Close the modal
@@ -1102,6 +1102,7 @@ function saveSession(sessionName, history, selectedOption) {
       model: model,
       systemText: systemText, // Save the system text
       selectedOption: selectedOption,
+      filePath: filePath,
     })
   );
   updateChatListAndSelection(sessionName);
@@ -1112,7 +1113,10 @@ function saveChat(mode = "chat") {
   const session = document.getElementById("userName").value;
   if (session === null || session.trim() === "") return;
   const history = document.getElementById("chat-history").innerHTML;
-  saveSession(session, encodeURIComponent(history), mode);
+  const filePath = document.getElementById("functionOption").checked
+    ? document.getElementById("file-path").value
+    : null;
+  saveSession(session, encodeURIComponent(history), mode, filePath);
   lastSelectedChat = session;
 }
 
@@ -1126,7 +1130,10 @@ function saveNotepad() {
   if (notepad1.trim() === "" && notepad2.trim() === "") return;
   const history = notepad1 + "\n" + notepad2;
   const session = document.getElementById("userName").value;
-  saveSession(session, history, "notepad");
+  const filePath = document.getElementById("functionOption").checked
+    ? document.getElementById("file-path").value
+    : null;
+  saveSession(session, history, "notepad", filePath);
   lastSelectedNotebook = session;
 }
 
@@ -1171,6 +1178,19 @@ function loadSelectedSession() {
     document.getElementById("chat-container").style.display = "block";
     document.getElementById("notepad-container").style.display = "none";
     lastSelectedChat = selectedChat;
+
+    // Check if the Function Calling radio button is selected
+    if (obj.selectedOption === "function") {
+      // Enable the file input and file path input
+      document.getElementById("file-input").disabled = false;
+      document.getElementById("file-path").disabled = false;
+      document.getElementById("upload-icon").classList.remove("disabled");
+    } else {
+      // Disable the file input and file path input
+      document.getElementById("file-input").disabled = true;
+      document.getElementById("file-path").disabled = true;
+      document.getElementById("upload-icon").classList.add("disabled");
+    }
   } else if (obj.selectedOption === "notepad") {
     document.getElementById("notepad1").value = decodeURIComponent(
       obj.history.split("\n")[0]
@@ -1183,6 +1203,10 @@ function loadSelectedSession() {
     updateTokenCounter("notepad1", "notepad-token-counter");
     lastSelectedNotebook = selectedChat;
   }
+
+  // Get the file path from the saved session
+  const filePath = obj.filePath || ""; // If filePath does not exist, set it to an empty string
+  document.getElementById("file-path").value = filePath; // Set the file path
 
   let systemText = decodeURIComponent(obj.systemText).replace(/\n/g, "\\n");
   document.getElementById("system-text").value = systemText; // Set the system text
@@ -1292,10 +1316,29 @@ window.onload = () => {
         uploadIcon.classList.add("disabled");
       }
     });
+
+    // Check if the 'functionOption' radio button is selected when the page loads
+    if (radio.id === "functionOption" && radio.checked) {
+      fileInput.disabled = false;
+      filePath.disabled = false;
+      uploadIcon.classList.remove("disabled");
+    } else {
+      // Otherwise, disable the file input and file path input initially
+      fileInput.disabled = true;
+      filePath.disabled = true;
+      uploadIcon.classList.add("disabled"); // Add the 'disabled' class
+    }
   });
 
-  // Disable the file input and file path input initially
-  document.getElementById("file-input").disabled = true;
-  document.getElementById("file-path").disabled = true;
-  uploadIcon.classList.add('disabled'); // Add the 'disabled' class
+  // // Check if the 'functionOption' radio button is selected when the page loads
+  // if (document.getElementById("functionOption").checked) {
+  //   fileInput.disabled = false;
+  //   filePath.disabled = false;
+  //   uploadIcon.classList.remove("disabled");
+  // } else {
+  //   // Otherwise, disable the file input and file path input initially
+  //   fileInput.disabled = true;
+  //   filePath.disabled = true;
+  //   uploadIcon.classList.add("disabled"); // Add the 'disabled' class
+  // }
 };
