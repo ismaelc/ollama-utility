@@ -25,7 +25,7 @@ const deleteIcon = `<svg xmlns="http://www.w3.org/2000/svg" width="16" height="1
 </svg>`;
 
 const TEMPERATURE = 0.1;
-const NUM_CONTEXT = 8000;
+const NUM_CONTEXT = 0;
 const NUM_PREDICT = 32000;
 
 // -------- GLOBALS --------
@@ -201,7 +201,7 @@ document.querySelector(".gear-icon").addEventListener("click", function () {
 
 document.querySelector(".pencil-icon").addEventListener("click", function () {
   // Get the system text
-  const systemText = getSystemText().replace(/\\n/g, '\n');
+  const systemText = getSystemText().replace(/\\n/g, "\n");
 
   // Set the value of the textarea in the modal
   document.getElementById("system-text-modal").value = systemText;
@@ -260,7 +260,10 @@ document
     const systemTextModal = document.getElementById("system-text-modal").value;
 
     // Set the value of the system text field
-    document.getElementById("system-text").value = systemTextModal.replace(/\n/g, "\\n");
+    document.getElementById("system-text").value = systemTextModal.replace(
+      /\n/g,
+      "\\n"
+    );
 
     // Close the modal
     let modal = bootstrap.Modal.getInstance(
@@ -335,11 +338,18 @@ function getModelOptions() {
     }
   }
 
-  return {
+  // Create the options object
+  let options = {
     temperature: temperature,
-    num_ctx: num_ctx,
     num_predict: num_predict,
   };
+
+  // Add num_ctx to the options object only if it's not zero
+  if (num_ctx !== 0) {
+    options.num_ctx = num_ctx;
+  }
+
+  return options;
 }
 
 function displayChatContainer() {
@@ -360,7 +370,7 @@ function prepareData(input, parsedHistory) {
 
   const system = {
     role: "system",
-    content: decodeURIComponent(getSystemText()).replace(/\\n/g, '\n'),
+    content: decodeURIComponent(getSystemText()).replace(/\\n/g, "\n"),
   };
   let prompt = [];
   if (isValidInput(input)) {
@@ -534,7 +544,7 @@ function parseChatHistory(htmlString) {
 
 // Function to get the system text
 function getSystemText() {
-  return decodeURIComponent(document.getElementById('system-text').value);
+  return decodeURIComponent(document.getElementById("system-text").value);
 }
 
 // Save system-text to localStorage
@@ -549,7 +559,9 @@ function saveSystemText() {
 function loadSystemText() {
   let systemText = localStorage.getItem(generateKey("system-text"));
   if (systemText) {
-    document.getElementById("system-text").value = decodeURIComponent(systemText).replace(/\n/g, "\\n");
+    document.getElementById("system-text").value = decodeURIComponent(
+      systemText
+    ).replace(/\n/g, "\\n");
   }
 }
 
@@ -607,7 +619,7 @@ function updateTokenCounter(element, counterId) {
   }
 
   // Add the system text to the text to count
-  const systemText = decodeURIComponent(getSystemText()).replace(/\\n/g, '\n');
+  const systemText = decodeURIComponent(getSystemText()).replace(/\\n/g, "\n");
   textToCount += systemText;
 
   const tokens = getTokens(textToCount);
@@ -687,10 +699,10 @@ function parseTextToDict(text) {
 
 function hasEncodedCharacters(str) {
   try {
-      return decodeURIComponent(str) !== str;
+    return decodeURIComponent(str) !== str;
   } catch (e) {
-      // If decodeURIComponent throws an error, it means str was not a valid encoded URI
-      return false;
+    // If decodeURIComponent throws an error, it means str was not a valid encoded URI
+    return false;
   }
 }
 
@@ -846,7 +858,7 @@ async function submitRequest() {
             `Thought: ${updatedDict["Thought"]}\n` +
             `Tool: ${updatedDict["Tool"]}\n` +
             `ToolInput: ${updatedDict["ToolInput"]}\n` +
-            `Observation: ${updatedDict["Observation"]}\n` + 
+            `Observation: ${updatedDict["Observation"]}\n` +
             `Answer: Based on above...`;
         }
 
