@@ -129,8 +129,8 @@ document
   .getElementById("system-text")
   .addEventListener("input", saveSystemText);
 document
-  .getElementById("file-input")
-  .addEventListener("change", fileInputChange);
+  .getElementById("session-input")
+  .addEventListener("change", sessionInputChange);
 document
   .getElementById("generate-button")
   .addEventListener("click", generateText);
@@ -275,6 +275,34 @@ document
     saveSystemText();
   });
 
+document.getElementById("file-input").addEventListener("change", function () {
+  var file = this.files[0];
+  var formData = new FormData();
+  formData.append("file", file);
+
+  fetch("http://localhost:8001/upload", {
+    method: "POST",
+    body: formData,
+  })
+    .then((response) => response.text())
+    .then((data) => {
+      // Use the returned response as the file path for the file-path element
+      document.getElementById("file-path").value = data;
+      updateFilePathValue(data);
+    })
+    .catch((error) => console.error(error));
+});
+
+var input = document.getElementById("file-path");
+
+input.addEventListener("input", function () {
+  localStorage.setItem(generateKey("file-path"), this.value);
+});
+
+input.addEventListener("change", function () {
+  localStorage.setItem(generateKey("file-path"), this.value);
+});
+
 // -------- HELPER FUNCTIONS --------
 
 /*
@@ -367,10 +395,12 @@ function isValidInput(input) {
 function prepareData(input, parsedHistory) {
   const selectedModel = getSelectedModel();
   const modelOptions = getModelOptions();
+  let systemText = replaceDataPath(decodeURIComponent(getSystemText()).replace(/\\n/g, "\n"));
+  systemText = replaceCurrentDate(systemText);
 
   const system = {
     role: "system",
-    content: decodeURIComponent(getSystemText()).replace(/\\n/g, "\n"),
+    content: systemText,
   };
   let prompt = [];
   if (isValidInput(input)) {
@@ -584,10 +614,10 @@ function exportChat() {
 
 // Function to import chat from a local file
 function importChat() {
-  document.getElementById("file-input").click();
+  document.getElementById("session-input").click();
 }
 
-function fileInputChange(e) {
+function sessionInputChange(e) {
   const files = e.target.files;
   for (let i = 0; i < files.length; i++) {
     const file = files[i];
@@ -704,6 +734,32 @@ function hasEncodedCharacters(str) {
     // If decodeURIComponent throws an error, it means str was not a valid encoded URI
     return false;
   }
+}
+
+function loadFilePath() {
+  let filePath = localStorage.getItem(generateKey("file-path"));
+  if (filePath) {
+    document.getElementById("file-path").value = filePath;
+  }
+}
+
+function updateFilePathValue(newValue) {
+  input.value = newValue;
+  localStorage.setItem(generateKey("file-path"), newValue);
+}
+
+function replaceDataPath(systemText) {
+  const filePathInput = document.getElementById("file-path");
+  let filePath = "NONE";
+  if (!filePathInput.disabled && filePathInput.value.trim() !== "") {
+    filePath = filePathInput.value.trim();
+  }
+  return systemText.replace(/<<DATA_PATH>>/g, filePath);
+}
+
+function replaceCurrentDate(systemText) {
+  return systemText.replace(/<<CURRENT_DATE>>/g, new Date().toISOString());
+
 }
 
 // -------- MAIN FUNCTIONS --------
@@ -839,14 +895,15 @@ async function submitRequest() {
           let observation = null;
           try {
             observation = await callTool(
-              firstDict["Tool"],
-              firstDict["ToolInput"]
+              firstDict["Tool"].split()[0],
+              firstDict["ToolInput"].split()[0]
             );
           } catch (error) {
             observation = `${error.message}.`;
           }
           updatedDict["Observation"] = observation;
         }
+
         let assistantResponse = "";
         // No Tool, but Answer available, meaning we need to answer the user now
         if (!("Tool" in updatedDict) && "Answer" in updatedDict) {
@@ -859,7 +916,7 @@ async function submitRequest() {
             `Tool: ${updatedDict["Tool"]}\n` +
             `ToolInput: ${updatedDict["ToolInput"]}\n` +
             `Observation: ${updatedDict["Observation"]}\n` +
-            `Answer: Based on above...`;
+            `Answer:`;
         }
 
         // Create updated assistant responseDiv
@@ -877,6 +934,7 @@ async function submitRequest() {
         result = createResponseDiv();
         responseDiv = result.responseDiv;
         responseTextDiv = result.responseTextDiv;
+
         // Check if the Function Calling radio button is selected
         if (
           document.querySelector('input[name="utilityOption"]:checked')
@@ -914,7 +972,7 @@ async function submitRequest() {
       // Gather new `data` for the next loop
       chatHistory = document.getElementById("chat-history");
       parsedHistory = parseChatHistory(chatHistory.innerHTML);
-      data = prepareData(input, parsedHistory);
+      data = prepareData('', parsedHistory);
     }
   } else {
     handlePostRequest(data, stopButton, responseDiv, responseTextDiv, timer);
@@ -1050,7 +1108,7 @@ function deleteSession(elementId) {
   updateChatListAndSelection();
 }
 
-function saveSession(sessionName, history, selectedOption) {
+function saveSession(sessionName, history, selectedOption, filePath) {
   if (sessionName === null || sessionName.trim() === "") return;
 
   // Close the modal
@@ -1068,6 +1126,7 @@ function saveSession(sessionName, history, selectedOption) {
       model: model,
       systemText: systemText, // Save the system text
       selectedOption: selectedOption,
+      filePath: filePath,
     })
   );
   updateChatListAndSelection(sessionName);
@@ -1078,7 +1137,10 @@ function saveChat(mode = "chat") {
   const session = document.getElementById("userName").value;
   if (session === null || session.trim() === "") return;
   const history = document.getElementById("chat-history").innerHTML;
-  saveSession(session, encodeURIComponent(history), mode);
+  const filePath = document.getElementById("functionOption").checked
+    ? document.getElementById("file-path").value
+    : null;
+  saveSession(session, encodeURIComponent(history), mode, filePath);
   lastSelectedChat = session;
 }
 
@@ -1092,7 +1154,10 @@ function saveNotepad() {
   if (notepad1.trim() === "" && notepad2.trim() === "") return;
   const history = notepad1 + "\n" + notepad2;
   const session = document.getElementById("userName").value;
-  saveSession(session, history, "notepad");
+  const filePath = document.getElementById("functionOption").checked
+    ? document.getElementById("file-path").value
+    : null;
+  saveSession(session, history, "notepad", filePath);
   lastSelectedNotebook = session;
 }
 
@@ -1137,6 +1202,19 @@ function loadSelectedSession() {
     document.getElementById("chat-container").style.display = "block";
     document.getElementById("notepad-container").style.display = "none";
     lastSelectedChat = selectedChat;
+
+    // Check if the Function Calling radio button is selected
+    if (obj.selectedOption === "function") {
+      // Enable the file input and file path input
+      document.getElementById("file-input").disabled = false;
+      document.getElementById("file-path").disabled = false;
+      document.getElementById("upload-icon").classList.remove("disabled");
+    } else {
+      // Disable the file input and file path input
+      document.getElementById("file-input").disabled = true;
+      document.getElementById("file-path").disabled = true;
+      document.getElementById("upload-icon").classList.add("disabled");
+    }
   } else if (obj.selectedOption === "notepad") {
     document.getElementById("notepad1").value = decodeURIComponent(
       obj.history.split("\n")[0]
@@ -1149,6 +1227,10 @@ function loadSelectedSession() {
     updateTokenCounter("notepad1", "notepad-token-counter");
     lastSelectedNotebook = selectedChat;
   }
+
+  // Get the file path from the saved session
+  const filePath = obj.filePath || ""; // If filePath does not exist, set it to an empty string
+  document.getElementById("file-path").value = filePath; // Set the file path
 
   let systemText = decodeURIComponent(obj.systemText).replace(/\n/g, "\\n");
   document.getElementById("system-text").value = systemText; // Set the system text
@@ -1216,6 +1298,7 @@ window.onload = () => {
   autoFocusInput();
   loadSystemText(); // Load system text from local storage
   checkTokenCount();
+  loadFilePath();
 
   // Ensure the UI reflects the current Ollama base URL
   if (document.querySelector("#settingsModal #host-address")) {
@@ -1235,4 +1318,51 @@ window.onload = () => {
     // Display chat input area
     document.getElementById("chat-container").style.display = "block";
   }
+
+  // Get the radio buttons and the file input
+  const radios = document.querySelectorAll('input[name="utilityOption"]');
+  const fileInput = document.getElementById("file-input");
+  const filePath = document.getElementById("file-path");
+  const uploadIcon = document.getElementById("upload-icon");
+
+  // Add an event listener to each radio button
+  radios.forEach((radio) => {
+    radio.addEventListener("change", () => {
+      // If the selected radio button is 'functionOption', enable the file input
+      if (radio.id === "functionOption") {
+        fileInput.disabled = false;
+        filePath.disabled = false;
+        uploadIcon.classList.remove("disabled");
+      } else {
+        // Otherwise, disable the file input
+        fileInput.disabled = true;
+        filePath.disabled = true;
+        uploadIcon.classList.add("disabled");
+      }
+    });
+
+    // Check if the 'functionOption' radio button is selected when the page loads
+    if (radio.id === "functionOption" && radio.checked) {
+      fileInput.disabled = false;
+      filePath.disabled = false;
+      uploadIcon.classList.remove("disabled");
+    } else {
+      // Otherwise, disable the file input and file path input initially
+      fileInput.disabled = true;
+      filePath.disabled = true;
+      uploadIcon.classList.add("disabled"); // Add the 'disabled' class
+    }
+  });
+
+  // // Check if the 'functionOption' radio button is selected when the page loads
+  // if (document.getElementById("functionOption").checked) {
+  //   fileInput.disabled = false;
+  //   filePath.disabled = false;
+  //   uploadIcon.classList.remove("disabled");
+  // } else {
+  //   // Otherwise, disable the file input and file path input initially
+  //   fileInput.disabled = true;
+  //   filePath.disabled = true;
+  //   uploadIcon.classList.add("disabled"); // Add the 'disabled' class
+  // }
 };

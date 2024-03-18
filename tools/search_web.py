@@ -1,21 +1,24 @@
-import subprocess
-import re
-import json
+from duckduckgo_search import ddg
+from newspaper import Article
+# import json
+
 
 def search_web(query):
-    try:
-        command = f"echo 'q\n' | ddgr {query} --json"
-        print('[COMMAND]', command)
-        process = subprocess.Popen(command, shell=True, stdout=subprocess.PIPE)
-        output, error = process.communicate()
-
-        if error:
-            print(f"Error: {error}")
-            return []
-        
-        output = output.decode('utf-8')
-        json_output = json.loads(output)  # convert string to Python object
-
-        return json_output[:3]  # return only top 3 objects
-    except Exception as e:
-        print(f"An error occurred: {e}")
+    results = ddg(query, max_results=3)
+    for result in results:
+        if 'body' in result:
+            result['text'] = result['body']
+            del result['body']
+        if result['href']:
+            try:
+                article = Article(result['href'])
+                article.download()
+                article.parse()
+                if article.summary:
+                    result['summary'] = article.summary
+                if article.text:
+                    result['text'] = article.text
+            except Exception as e:
+                result['error'] = str(e)
+    # print(json.dumps(results, indent=2))
+    return results

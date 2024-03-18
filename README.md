@@ -49,12 +49,12 @@ Download the Ollama Windows client from https://ollama.com/download/windows
 Open PowerShell as Administrator and run:
 
 ```powershell
-# Download and run GetOllamaUtility.ps1
+# Download and run GetOllamaUtility.ps1. This will create an `ollama-utility` folder in the current directory
 Invoke-WebRequest "https://raw.githubusercontent.com/ismaelc/ollama-utility/main/windows/GetOllamaUtility.ps1" -OutFile "GetOllamaUtility.ps1"
 Set-ExecutionPolicy RemoteSigned -Scope CurrentUser -Force
 .\GetOllamaUtility.ps1
 
-# Download and run RunOllamaUtility.ps1
+# Download and run RunOllamaUtility.ps1. Run the ps1 file below just outside of the `ollama-utility` folder.
 Invoke-WebRequest "https://raw.githubusercontent.com/ismaelc/ollama-utility/main/windows/RunOllamaUtility.ps1" -OutFile "RunOllamaUtility.ps1"
 .\RunOllamaUtility.ps1
 

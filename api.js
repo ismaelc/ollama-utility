@@ -170,7 +170,6 @@ async function callTool(tool, toolInput) {
     });
     if (response.ok) {
       const text = await response.text();
-      console.log(text); // Process response text as needed
       return text;
     } else {
       const errorText = `Failed to call the tool "${tool}" with input "${toolInput}". ${response.statusText}`;

@@ -86,9 +86,9 @@ python_server:
 	#
 	# [python_server]
 	echo "Checking for any process using port $(PYTHON_SERVER_PORT)..."
-	PID=$$(lsof -ti:$(PYTHON_SERVER_PORT)); if [ -n "$$PID" ]; then echo "Killing process $$PID using port $(PYTHON_SERVER_PORT)"; kill $$PID; fi
+	PID=$$(lsof -ti:$(PYTHON_SERVER_PORT)); if [ -n "$$PID" ]; then echo "Killing process $$PID using port $(PYTHON_SERVER_PORT)"; kill -9 $$PID; fi
 	echo "Starting Python server on port $(PYTHON_SERVER_PORT)..."
-	python3 server.py $(PYTHON_SERVER_PORT) &
+	python3 server.py $(PYTHON_SERVER_PORT) $(WEB_SERVER_PORT) &
 
 # Web Server
 web_server:
