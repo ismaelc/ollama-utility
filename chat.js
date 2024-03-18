@@ -286,7 +286,6 @@ document.getElementById("file-input").addEventListener("change", function () {
   })
     .then((response) => response.text())
     .then((data) => {
-      console.log(data);
       // Use the returned response as the file path for the file-path element
       document.getElementById("file-path").value = data;
       updateFilePathValue(data);
@@ -396,10 +395,12 @@ function isValidInput(input) {
 function prepareData(input, parsedHistory) {
   const selectedModel = getSelectedModel();
   const modelOptions = getModelOptions();
+  let systemText = replaceDataPath(decodeURIComponent(getSystemText()).replace(/\\n/g, "\n"));
+  systemText = replaceCurrentDate(systemText);
 
   const system = {
     role: "system",
-    content: decodeURIComponent(getSystemText()).replace(/\\n/g, "\n"),
+    content: systemText,
   };
   let prompt = [];
   if (isValidInput(input)) {
@@ -747,6 +748,20 @@ function updateFilePathValue(newValue) {
   localStorage.setItem(generateKey("file-path"), newValue);
 }
 
+function replaceDataPath(systemText) {
+  const filePathInput = document.getElementById("file-path");
+  let filePath = "NONE";
+  if (!filePathInput.disabled && filePathInput.value.trim() !== "") {
+    filePath = filePathInput.value.trim();
+  }
+  return systemText.replace(/<<DATA_PATH>>/g, filePath);
+}
+
+function replaceCurrentDate(systemText) {
+  return systemText.replace(/<<CURRENT_DATE>>/g, new Date().toISOString());
+
+}
+
 // -------- MAIN FUNCTIONS --------
 
 function autoFocusInput() {
@@ -880,14 +895,15 @@ async function submitRequest() {
           let observation = null;
           try {
             observation = await callTool(
-              firstDict["Tool"],
-              firstDict["ToolInput"]
+              firstDict["Tool"].split()[0],
+              firstDict["ToolInput"].split()[0]
             );
           } catch (error) {
             observation = `${error.message}.`;
           }
           updatedDict["Observation"] = observation;
         }
+
         let assistantResponse = "";
         // No Tool, but Answer available, meaning we need to answer the user now
         if (!("Tool" in updatedDict) && "Answer" in updatedDict) {
@@ -900,7 +916,7 @@ async function submitRequest() {
             `Tool: ${updatedDict["Tool"]}\n` +
             `ToolInput: ${updatedDict["ToolInput"]}\n` +
             `Observation: ${updatedDict["Observation"]}\n` +
-            `Answer: Based on above...`;
+            `Answer:`;
         }
 
         // Create updated assistant responseDiv
@@ -918,6 +934,7 @@ async function submitRequest() {
         result = createResponseDiv();
         responseDiv = result.responseDiv;
         responseTextDiv = result.responseTextDiv;
+
         // Check if the Function Calling radio button is selected
         if (
           document.querySelector('input[name="utilityOption"]:checked')
@@ -955,7 +972,7 @@ async function submitRequest() {
       // Gather new `data` for the next loop
       chatHistory = document.getElementById("chat-history");
       parsedHistory = parseChatHistory(chatHistory.innerHTML);
-      data = prepareData(input, parsedHistory);
+      data = prepareData('', parsedHistory);
     }
   } else {
     handlePostRequest(data, stopButton, responseDiv, responseTextDiv, timer);
