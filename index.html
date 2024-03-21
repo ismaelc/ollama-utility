@@ -44,8 +44,37 @@
   <body data-bs-theme="dark">
     <div class="container" id="ollama-panel">
       <div class="row pt-3">
-        <div class="col-md-8 col-12">
-          <h4>Ollama Utility</h4>
+        <div id="session-controls" class="col-12">
+          <div class="d-flex align-items-center">
+            <button
+              id="import-button"
+              class="btn btn-primary me-2"
+              type="button"
+            >
+              Import
+            </button>
+            <button
+              id="export-button"
+              class="btn btn-primary me-2"
+              type="button"
+            >
+              Export
+            </button>
+            <!-- <label for="chat-select" class="form-label me-2" style="font-size: smaller;">Session:</label> -->
+            <select id="chat-select" class="form-select" style="width: auto">
+              <option value="" disabled selected>Select a session</option>
+            </select>
+            <img src="images/bolt.png" id="bolt-icon" alt="bolt icon">
+            <input
+              type="file"
+              id="session-input"
+              style="display: none"
+              multiple
+            />
+          </div>
+        </div>
+        <div id="mode-selection" class="col-md-8 col-12">
+          <!-- <h4>Ollama Utility</h4>-->      
           <div class="form-check">
             <input
               class="form-check-input"
@@ -150,34 +179,7 @@
             </div>
           </div>
         </div>
-        <div id="session-controls" class="col-12">
-          <div class="d-flex align-items-center">
-            <button
-              id="import-button"
-              class="btn btn-primary me-2"
-              type="button"
-            >
-              Import
-            </button>
-            <button
-              id="export-button"
-              class="btn btn-primary me-2"
-              type="button"
-            >
-              Export
-            </button>
-            <!-- <label for="chat-select" class="form-label me-2" style="font-size: smaller;">Session:</label> -->
-            <select id="chat-select" class="form-select" style="width: auto">
-              <option value="" disabled selected>Select a session</option>
-            </select>
-            <input
-              type="file"
-              id="session-input"
-              style="display: none"
-              multiple
-            />
-          </div>
-        </div>
+
       </div>
     </div>
     <div class="container" id="chat-container">
@@ -470,6 +472,35 @@
             >
               Save changes
             </button>
+          </div>
+        </div>
+      </div>
+    </div>
+
+    <!-- Information Modal -->
+    <div class="modal fade" id="infoModal" tabindex="-1" aria-labelledby="infoModalLabel" aria-hidden="true">
+      <div class="modal-dialog">
+        <div class="modal-content">
+          <div class="modal-header">
+            <h5 class="modal-title" id="infoModalLabel">Ollama Utility</h5>
+            <button type="button" class="btn-close" data-bs-dismiss="modal" aria-label="Close"></button>
+          </div>
+          <div class="modal-body">
+            <p>Welcome to Ollama Utility! Here's how to use it:</p>
+            <ul>
+              <li><strong>Import/Export:</strong> Use the Import and Export buttons to load or save a chat session from/to a local file.</li>
+              <li><strong>Select a session:</strong> Use the dropdown to select a previously saved chat session.</li>
+              <li><strong>Chat/Notepad/Function Calling:</strong> Choose the mode of operation. In Chat mode, you can interact with the model in a conversational manner. In Notepad mode, you can generate text based on the input in the left panel. In Function Calling mode, you can use the model to call functions.</li>
+              <li><strong>Model:</strong> Select the model you want to use for text generation.</li>
+              <li><strong>System text:</strong> Enter the system text that will be used for text generation. You can use &lt;&lt;DATA_PATH&gt;&gt; as a placeholder for the file/folder/url and &lt;&lt;CURRENT_DATE&gt;&gt; for the current date.</li>
+              <li><strong>File/folder/url:</strong> Enter the file path, folder path, or URL that will replace &lt;&lt;DATA_PATH&gt;&gt; in your system text. This only works with Function Calling mode.</li>
+              <li><strong>Chat:</strong> Type your message in the input box and press Send. The model's response will appear in the chat history. You can delete individual messages by clicking the trash icon.</li>
+              <li><strong>Notepad:</strong> Type your text in the left panel and press Generate. The generated text will appear in the right panel. You can delete the notepad content by clicking Delete Notepad.</li>
+            </ul>
+            <p>Enjoy using Ollama Utility!</p>
+          </div>
+          <div class="modal-footer">
+            <button type="button" class="btn btn-secondary" data-bs-dismiss="modal">Close</button>
           </div>
         </div>
       </div>
