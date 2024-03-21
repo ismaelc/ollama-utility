@@ -38,6 +38,11 @@ body {
   display: none;
   margin: 0 auto;
   overflow: auto;
+  margin-top: -0.5rem; /* Adjust the value as needed */
+}
+
+#notepad-container {
+  margin-top: -0.5rem; /* Adjust the value as needed */
 }
 
 .host-address-select {
@@ -75,6 +80,11 @@ body {
   padding: 10px;
 }
 
+#bolt-icon {
+  width: 32px; /* adjust as needed */
+  height: 32px; /* adjust as needed */
+}
+
 .gear-icon {
   margin-left: 8px;
   margin-right: 8px;
@@ -100,13 +110,17 @@ body {
 }
 
 #model-controls {
-  padding-top: 20px; /* adjust the value as needed */
+  padding-top: -1rem; /* adjust the value as needed */
   margin-bottom: -1rem;
 }
 
 #session-controls {
   /* margin-top: -1rem; */
   margin-bottom: 1rem;
+}
+
+#session-controls .gear-icon {
+  margin-left: 8px;
 }
 
 #export-button {
@@ -123,7 +137,6 @@ body {
   justify-content: flex-end; /* Adjust this to align items to the end */
   width: 100%; /* Ensure the container uses the full width */
 }
-
 
 /* Style adjustments for labels to align text right */
 #model-controls label {
@@ -147,4 +160,8 @@ body {
 .bi-upload.disabled {
   color: #6c757d; /* Bootstrap's 'secondary' color */
   cursor: not-allowed;
+}
+
+#mode-selection {
+  margin-top: 1.1rem; /* Adjust the value as needed */
 }

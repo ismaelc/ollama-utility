@@ -1,3 +1,5 @@
 pdfminer.six
 duckduckgo-search
 newspaper3k
+chromadb
+semantic-text-splitter

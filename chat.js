@@ -303,6 +303,16 @@ input.addEventListener("change", function () {
   localStorage.setItem(generateKey("file-path"), this.value);
 });
 
+document.getElementById('bolt-icon').addEventListener('click', function() {
+  var myModal = new bootstrap.Modal(document.getElementById('infoModal'), {});
+  myModal.show();
+});
+
+document.getElementById('bolt-icon').addEventListener('mouseover', function() {
+  var myModal = new bootstrap.Modal(document.getElementById('infoModal'), {});
+  myModal.show();
+});
+
 // -------- HELPER FUNCTIONS --------
 
 /*
