@@ -5,6 +5,10 @@
 # response = index_folder('/Users/I845622/Desktop/ConcurTraining docs')
 # print(response)
 
-from find_snippets import find_snippets
-response = find_snippets('/Users/I845622/Desktop/ConcurTraining docs', 'meal allowance')
+# from search_snippets import search_snippets
+# response = search_snippets('meals')
+# print(response)
+
+from peek_count_index import peek_count_index
+response = peek_count_index('Users_I845622_Desktop_ConcurTraining_docs')
 print(response)

@@ -1,2 +1,5 @@
 tools/__pycache__/
-resources/*
+resources
+app.log
+.chroma_db
+current_index.txt

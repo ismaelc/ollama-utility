@@ -165,3 +165,7 @@ body {
 #mode-selection {
   margin-top: 1.1rem; /* Adjust the value as needed */
 }
+
+.strikethrough {
+  text-decoration: line-through;
+}

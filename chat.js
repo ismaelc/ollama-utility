@@ -76,6 +76,10 @@ document.getElementById("user-input").addEventListener("keydown", function (e) {
   }
 });
 
+document.getElementById("refresh-chat").addEventListener("click", function () {
+  document.getElementById("chat-history").innerHTML = "";
+});
+
 document.getElementById("delete-chat").addEventListener("click", function () {
   const selectedSession = document.getElementById("chat-select").value;
   if (selectedSession) {
@@ -90,6 +94,14 @@ document.getElementById("delete-chat").addEventListener("click", function () {
     document.getElementById("chat-history").innerHTML = "";
   }
 });
+
+document
+  .getElementById("refresh-notepad")
+  .addEventListener("click", function () {
+    document.getElementById("notepad1").value = "";
+    document.getElementById("notepad2").value = "";
+  });
+
 document
   .getElementById("delete-notepad")
   .addEventListener("click", function () {
@@ -110,6 +122,7 @@ document
       document.getElementById("notepad2").value = "";
     }
   });
+
 document.getElementById("saveName").addEventListener("click", function () {
   const selectedOption = document.querySelector(
     'input[name="utilityOption"]:checked'
@@ -120,6 +133,7 @@ document.getElementById("saveName").addEventListener("click", function () {
     saveNotepad();
   }
 });
+
 document
   .getElementById("chat-select")
   .addEventListener("change", loadSelectedSession);
@@ -303,13 +317,13 @@ input.addEventListener("change", function () {
   localStorage.setItem(generateKey("file-path"), this.value);
 });
 
-document.getElementById('bolt-icon').addEventListener('click', function() {
-  var myModal = new bootstrap.Modal(document.getElementById('infoModal'), {});
+document.getElementById("bolt-icon").addEventListener("click", function () {
+  var myModal = new bootstrap.Modal(document.getElementById("infoModal"), {});
   myModal.show();
 });
 
-document.getElementById('bolt-icon').addEventListener('mouseover', function() {
-  var myModal = new bootstrap.Modal(document.getElementById('infoModal'), {});
+document.getElementById("bolt-icon").addEventListener("mouseover", function () {
+  var myModal = new bootstrap.Modal(document.getElementById("infoModal"), {});
   myModal.show();
 });
 
@@ -405,7 +419,9 @@ function isValidInput(input) {
 function prepareData(input, parsedHistory) {
   const selectedModel = getSelectedModel();
   const modelOptions = getModelOptions();
-  let systemText = replaceDataPath(decodeURIComponent(getSystemText()).replace(/\\n/g, "\n"));
+  let systemText = replaceDataPath(
+    decodeURIComponent(getSystemText()).replace(/\\n/g, "\n")
+  );
   systemText = replaceCurrentDate(systemText);
 
   const system = {
@@ -769,7 +785,6 @@ function replaceDataPath(systemText) {
 
 function replaceCurrentDate(systemText) {
   return systemText.replace(/<<CURRENT_DATE>>/g, new Date().toISOString());
-
 }
 
 // -------- MAIN FUNCTIONS --------
@@ -982,7 +997,7 @@ async function submitRequest() {
       // Gather new `data` for the next loop
       chatHistory = document.getElementById("chat-history");
       parsedHistory = parseChatHistory(chatHistory.innerHTML);
-      data = prepareData('', parsedHistory);
+      data = prepareData("", parsedHistory);
     }
   } else {
     handlePostRequest(data, stopButton, responseDiv, responseTextDiv, timer);
@@ -1161,7 +1176,7 @@ function saveNotepad() {
   const notepad2 = encodeURIComponent(
     document.getElementById("notepad2").value
   );
-  if (notepad1.trim() === "" && notepad2.trim() === "") return;
+  // if (notepad1.trim() === "" && notepad2.trim() === "") return;
   const history = notepad1 + "\n" + notepad2;
   const session = document.getElementById("userName").value;
   const filePath = document.getElementById("functionOption").checked
@@ -1219,11 +1234,21 @@ function loadSelectedSession() {
       document.getElementById("file-input").disabled = false;
       document.getElementById("file-path").disabled = false;
       document.getElementById("upload-icon").classList.remove("disabled");
+
+      // Remove strikethrough
+      document.getElementById("file-input").classList.remove("strikethrough");
+      document.getElementById("file-path").classList.remove("strikethrough");
     } else {
+      // Add strikethrough
+      document.getElementById("file-input").classList.add("strikethrough");
+      document.getElementById("file-path").classList.add("strikethrough");
+
       // Disable the file input and file path input
       document.getElementById("file-input").disabled = true;
       document.getElementById("file-path").disabled = true;
       document.getElementById("upload-icon").classList.add("disabled");
+
+
     }
   } else if (obj.selectedOption === "notepad") {
     document.getElementById("notepad1").value = decodeURIComponent(
@@ -1342,11 +1367,13 @@ window.onload = () => {
       if (radio.id === "functionOption") {
         fileInput.disabled = false;
         filePath.disabled = false;
+        filePath.classList.remove("strikethrough");
         uploadIcon.classList.remove("disabled");
       } else {
         // Otherwise, disable the file input
         fileInput.disabled = true;
         filePath.disabled = true;
+        filePath.classList.add("strikethrough");
         uploadIcon.classList.add("disabled");
       }
     });
@@ -1355,11 +1382,13 @@ window.onload = () => {
     if (radio.id === "functionOption" && radio.checked) {
       fileInput.disabled = false;
       filePath.disabled = false;
+      filePath.classList.remove("strikethrough");
       uploadIcon.classList.remove("disabled");
     } else {
       // Otherwise, disable the file input and file path input initially
       fileInput.disabled = true;
       filePath.disabled = true;
+      filePath.classList.add("strikethrough");
       uploadIcon.classList.add("disabled"); // Add the 'disabled' class
     }
   });

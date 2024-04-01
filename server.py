@@ -6,6 +6,11 @@ import argparse
 import cgi
 import os
 import tempfile
+import logging
+
+# Set up logging
+logging.basicConfig(filename='app.log', level=logging.INFO, 
+                    format='%(asctime)s %(levelname)s %(message)s')
 
 
 class MyRequestHandler(BaseHTTPRequestHandler):
@@ -31,15 +36,16 @@ class MyRequestHandler(BaseHTTPRequestHandler):
                 tool_input = tool_input.replace('%22', '')
                 tool_input = tool_input.replace('%27', '')
 
-                print(f"[QUERY]: {parsed_path.query}")
-                print(f"[TOOL]: {tool_name}")
-                print(f"[INPUT]: {tool_input}")
+                logging.info(f"[QUERY]: {parsed_path.query}")
+                logging.info(f"[TOOL]: {tool_name}")
+                logging.info(f"[INPUT]: {tool_input}")
+                logging.info("Calling tool...")
 
                 tool_module = importlib.import_module(f'tools.{tool_name}')
                 tool_function = getattr(tool_module, tool_name)
                 result = tool_function(tool_input)
 
-                print(f"[RESULT]: {result}")
+                logging.info(f"[RESULT]: ...<removed>...")
 
                 self.send_response(200)
                 self.send_header('Access-Control-Allow-Origin',
@@ -49,6 +55,7 @@ class MyRequestHandler(BaseHTTPRequestHandler):
                 self.end_headers()
                 self.wfile.write(str(result).encode())
             except Exception as e:
+                logging.error(f"Error: {str(e)}")
                 self.send_response(500)
                 self.send_header('Access-Control-Allow-Origin',
                                  f'http://localhost:{args.web_server_port}')
@@ -70,6 +77,7 @@ class MyRequestHandler(BaseHTTPRequestHandler):
                 self.wfile.write(
                     b"Process 'ollama serve' terminated successfully.")
             except Exception as e:
+                logging.error(f"Error: {str(e)}")
                 self.send_response(500)
                 self.send_header('Access-Control-Allow-Origin',
                                  f'http://localhost:{args.web_server_port}')
@@ -89,6 +97,7 @@ class MyRequestHandler(BaseHTTPRequestHandler):
                 self.wfile.write(
                     b"Process 'ollama serve' started successfully.")
             except Exception as e:
+                logging.error(f"Error: {str(e)}")
                 self.send_response(500)
                 self.send_header('Access-Control-Allow-Origin',
                                  f'http://localhost:{args.web_server_port}')
@@ -136,5 +145,5 @@ parser.add_argument(
 args = parser.parse_args()
 
 httpd = HTTPServer(('localhost', args.port), MyRequestHandler)
-print(f"Serving utility functions on port {args.port}")
+logging.info(f"Serving utility functions on port {args.port}")
 httpd.serve_forever()

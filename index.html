@@ -24,19 +24,13 @@
       integrity="sha256-QigBQMy2be3IqJD2ezKJUJ5gycSmyYlRHj2VGBuITpU="
       crossorigin="anonymous"
     ></script>
-    <!--
-    <script src="/resources/base64js.min.js"></script>
-    <script type="module" src="/resources/chunk-HXW345QN.js"></script>
-    <script type="module" src="resources/lite.min.js"></script>
-    -->
     <script src="https://unpkg.com/gpt-tokenizer"></script>
     <script>
       // the package is now available as a global:
       const { encode, decode } = GPTTokenizer_cl100k_base;
     </script>
-    <!-- <link rel="stylesheet" href="chat.css"> -->
     <link
-      href="https://cdn.jsdelivr.net/npm/bootstrap-icons@1.7.2/font/bootstrap-icons.css"
+      href="resources/bootstrap-icons.css"
       rel="stylesheet"
     />
   </head>
@@ -188,6 +182,9 @@
           <div class="text-end">
             <label id="timer-label-chat" class="me-2">Time: 0s</label>
             <label id="token-counter" class="me-2">Tokens: 0</label>
+            <button id="refresh-chat" class="btn btn-primary" type="button">
+              Refresh Chat
+            </button>
             <button id="delete-chat" class="btn btn-danger" type="button">
               Delete Chat
             </button>
@@ -257,6 +254,9 @@
           <div class="text-end">
             <label id="timer-label-notepad" class="me-2">Time: 0s</label>
             <label id="notepad-token-counter" class="me-2">Tokens: 0</label>
+            <button id="refresh-notepad" class="btn btn-primary" type="button">
+              Refresh Notepad
+            </button>
             <button id="delete-notepad" class="btn btn-danger" type="button">
               Delete Notepad
             </button>

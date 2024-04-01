@@ -51,7 +51,9 @@ function Download-Resources {
         Invoke-WebRequest -Uri "https://cdn.jsdelivr.net/npm/bootstrap@5.3.1/dist/css/bootstrap.min.css" -OutFile "bootstrap.min.css"
         Invoke-WebRequest -Uri "https://cdn.jsdelivr.net/npm/bootstrap@5.3.1/dist/js/bootstrap.bundle.min.js" -OutFile "bootstrap.bundle.min.js"
         Invoke-WebRequest -Uri "https://cdn.jsdelivr.net/npm/marked@6.0.0/marked.min.js" -OutFile "marked.min.js"
-        Invoke-WebRequest -Uri "https://cdn.jsdelivr.net/npm/dompurify@3.0.5/dist/purify.min.js" -OutFile "purify.min.js"
+        Invoke-WebRequest -Uri "https://cdn.jsdelivr.net/npm/bootstrap-icons@1.11.3/font/fonts/bootstrap-icons.woff" -OutFile "fonts/bootstrap-icons.woff"
+        Invoke-WebRequest -Uri "https://cdn.jsdelivr.net/npm/bootstrap-icons@1.11.3/font/fonts/bootstrap-icons.woff2" -OutFile "fonts/bootstrap-icons.woff2"
+        Invoke-WebRequest -Uri "https://cdn.jsdelivr.net/npm/bootstrap-icons@1.11.3/font/bootstrap-icons.css" -OutFile "bootstrap-icons.css"
         Pop-Location
     }
 }
